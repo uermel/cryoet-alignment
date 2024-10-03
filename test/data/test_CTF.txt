@@ -1,0 +1,4 @@
+# Columns: #1 micrograph number; #2 - defocus 1 [A]; #3 - defocus 2; #4 - azimuth of astigmatism; #5 - additional phase shift [radian]; #6 - cross correlation; #7 - spacing (in Angstroms) up to which CTF rings were fit successfully
+   1   25951.41  24469.37     88.08      0.00   -0.0105   24.6784
+   2   24973.29  23547.11     83.57      0.00   -0.0030   23.3444
+   3   20648.45  19469.25     77.32      0.00    0.0276   11.0736

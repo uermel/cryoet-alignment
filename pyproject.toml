@@ -1,0 +1,131 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cryoet_alignment"
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+]
+#dynamic = ["version"]
+version = "0.0.1"
+dependencies = [
+    "click",
+    "fsspec>=2024.6.0",
+    "numpy<2",
+    "mrcfile",
+    "pydantic>=2",
+    "s3fs",
+    "pandas",
+]
+authors = [
+  {name = "Utz H. Ermel", email = "utz.ermel@czii.org"},
+]
+description = "Alignment format conversion for cryoET."
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["cryoet", "cryo-et", "tomography", "alignment"]
+
+[project.urls]
+Repository = "https://github.com/uermel/cryoet-alignment.git"
+Issues = "https://github.com/uermel/cryoet-alignment/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+dev = [
+    "black",
+    "ipython",
+    "pre-commit",
+    "ruff",
+    "notebook",
+]
+docs = [
+    "mkdocs",
+    "mkdocstrings[python]",
+    "mkdocs-autorefs",
+    "mkdocs-material",
+]
+
+[project.scripts]
+make_templates = "copick.cli.make_templates:create [docs]"
+
+[tool.black]
+line-length = 120
+target_version = ['py311']
+
+[tool.ruff]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "B",       # bugbear
+    "I",       # isort
+    "N",       # pep8-naming
+    "ASYNC",   # async
+    "COM",     # commas
+    "C4",      # comprehensions
+    "DTZ",     # datetimez
+    "ISC",     # implicit-str-concat
+    "G",       # logging-format
+    "T20",     # print
+    "SIM",     # simplify
+]
+ignore = [
+    "W293",   # blank line contains whitespace
+    "B008",   # Do not perform calls in argument defaults
+    "B905",   # `zip()` without an explicit `strict=` parameter
+    "N802",   # Function name should be lowercase
+    "N805",   # First argument of a method should be named `self`
+    "N806",   # Variable in function should be lowercase
+    "N999",   # Invalid module name
+    "E501",   # line too long
+    "C408",   # rewrite empty built-ins as literals
+    "T201",   # print statements.
+    "DTZ007", # Datetime objects without timezones.
+    "DTZ005", # More datetimes without timezones.
+]
+line-length = 120
+target-version = "py311"
+exclude = [
+    "mkdocs.yml",
+]
+
+[tool.ruff.isort]
+known-first-party =["common"]
+
+[tool.ruff.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.hatch.envs.test]
+dependencies = [
+  "pytest",
+]
+
+[tool.hatch.envs.test.scripts]
+test = "pytest {args:tests}"
+
+[tool.hatch.envs.test_extended]
+dependencies = [
+  "pytest",
+]
+
+[tool.hatch.envs.test_extended.scripts]
+test = "pytest {args:tests}"
+
+# https://docs.pytest.org/en/latest/reference/customize.html
+[tool.pytest.ini_options]
+minversion = "6.0"
+testpaths = ["tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "@overload",
+    "except ImportError",
+    "pass",
+]
