@@ -93,8 +93,8 @@ class Alignment(FileIOBase):
         if vol is not None:
             header = get_mrc_header_local(vol)
             x = header.cella.x / header.mx * header.nx
-            y = header.cella.y / header.my * header.ny
-            z = header.cella.z / header.mz * header.nz
+            z = header.cella.y / header.my * header.ny
+            y = header.cella.z / header.mz * header.nz
         else:
             x, y, z = 0, 0, 0
 
