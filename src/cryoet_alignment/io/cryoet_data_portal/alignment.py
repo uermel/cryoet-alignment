@@ -146,7 +146,7 @@ class Alignment(FileIOBase):
         return cls.from_imod(imod_alignment=imod_alignment, vol=vol_path)
 
     @classmethod
-    def from_aretomo3(cls, vol: str, aln: AreTomo3ALN):
+    def from_aretomo3(cls, aln: AreTomo3ALN, vol: str = None, vol_size: Tuple[int, int, int] = None):
         affine_transform = np.eye(4, 4).tolist()
         alignment_type = "GLOBAL"
         format = "ARETOMO3"
@@ -164,11 +164,20 @@ class Alignment(FileIOBase):
             aln.GlobalAlignments,
         ), "Number of sections does not match number of DarkFrames."
 
-        header = get_mrc_header_local(vol)
-        x = header.cella.x / header.mx * header.nx
-        y = header.cella.y / header.my * header.ny
-        z = header.cella.z / header.mz * header.nz
-        volume_dimension = {"x": x, "y": y, "z": z}
+        if vol is not None:
+            header = get_mrc_header_local(vol)
+            x = header.cella.x / header.mx * header.nx
+            y = header.cella.y / header.my * header.ny
+            z = header.cella.z / header.mz * header.nz
+            volume_dimension = {"x": x, "y": y, "z": z}
+        elif vol_size is not None:
+            x = vol_size[0]
+            y = vol_size[1]
+            z = vol_size[2]
+            volume_dimension = {"x": x, "y": y, "z": z}
+        else:
+            x, y, z = 0, 0, 0
+            volume_dimension = {"x": x, "y": y, "z": z}
 
         for idx, ali in zip(orig_sections, aln.GlobalAlignments):
             z_index = idx
