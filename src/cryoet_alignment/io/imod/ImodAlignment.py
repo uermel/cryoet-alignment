@@ -3,7 +3,10 @@ from typing import Optional, Union
 
 from pydantic import BaseModel
 
-from cryoet_alignment.io.imod import ImodNEWSTCOM, ImodTILTCOM, ImodTLT, ImodXF, ImodXTILT
+from cryoet_alignment.io.imod.newst import ImodNEWSTCOM
+from cryoet_alignment.io.imod.rawtlt import ImodTLT, ImodXTILT
+from cryoet_alignment.io.imod.tilt import ImodTILTCOM
+from cryoet_alignment.io.imod.xf import ImodXF
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
 
