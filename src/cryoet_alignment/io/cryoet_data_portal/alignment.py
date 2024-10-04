@@ -75,6 +75,7 @@ class Alignment(FileIOBase):
         cls,
         imod_alignment: ImodAlignment,
         vol: Optional[str] = None,
+        vol_size: Tuple[float, float, float] = None,
     ):
         xf = imod_alignment.xf
         tlt = imod_alignment.tlt
@@ -95,6 +96,10 @@ class Alignment(FileIOBase):
             x = header.cella.x / header.mx * header.nx
             z = header.cella.y / header.my * header.ny
             y = header.cella.z / header.mz * header.nz
+        elif vol_size is not None:
+            x = vol_size[0]
+            y = vol_size[1]
+            z = vol_size[2]
         else:
             x, y, z = 0, 0, 0
 
@@ -146,7 +151,7 @@ class Alignment(FileIOBase):
         return cls.from_imod(imod_alignment=imod_alignment, vol=vol_path)
 
     @classmethod
-    def from_aretomo3(cls, aln: AreTomo3ALN, vol: str = None, vol_size: Tuple[int, int, int] = None):
+    def from_aretomo3(cls, aln: AreTomo3ALN, vol: str = None, vol_size: Tuple[float, float, float] = None):
         affine_transform = np.eye(4, 4).tolist()
         alignment_type = "GLOBAL"
         format = "ARETOMO3"
