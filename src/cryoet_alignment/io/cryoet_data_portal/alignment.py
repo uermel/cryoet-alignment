@@ -105,7 +105,11 @@ class Alignment(FileIOBase):
 
         volume_dimension = {"x": x, "y": y, "z": z}
 
-        it = zip(xf.alignments, tlt.angles) if xtlt is None else zip(xf.alignments, tlt.angles, xtlt.angles)
+        it = (
+            zip(xf.alignments, tlt.angles, [0.0] * len(tlt.angles))
+            if xtlt is None
+            else zip(xf.alignments, tlt.angles, xtlt.angles)
+        )
 
         skip = []
         if tiltcom is not None:
