@@ -1,6 +1,8 @@
 import re
 from typing import List, Optional, Tuple
 
+from pydantic import Field
+
 from cryoet_alignment.io.base import FileIOBase
 
 
@@ -67,7 +69,7 @@ class ImodTILTCOM(FileIOBase):
     XAXISTILT: float = 0.0
     SCALE: Tuple[float, float] = (0.0, 0.1)
     PERPENDICULAR: bool = True
-    MODE: int = 2
+    MODE: int = Field(alias="Mode", default=2)  # int = 2
     FULLIMAGE: Tuple[int, int]
     SUBSETSTART: Tuple[int, int] = (0, 0)
     AdjustOrigin: bool = True
