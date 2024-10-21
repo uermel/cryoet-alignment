@@ -10,7 +10,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 #dynamic = ["version"]
-version = "0.0.6"
+version = "0.0.7"
 dependencies = [
     "click",
     "fsspec>=2024.6.0",
