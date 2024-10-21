@@ -5,7 +5,7 @@ from cryoet_alignment.io.base import FileIOBase
 
 
 class ImodNEWSTCOM(FileIOBase):
-    AntialiasFilter: int = -1
+    AntialiasFilter: Optional[int] = -1
     InputFile: str
     OutputFile: str
     TransformFile: str
@@ -49,7 +49,8 @@ class ImodNEWSTCOM(FileIOBase):
 
     def __str__(self) -> str:
         outputs = "$setenv IMOD_OUTPUT_FORMAT MRC\n$newstack -StandardInput\n"
-        outputs += f"AntialiasFilter\t{self.AntialiasFilter}\n"
+        if self.AntialiasFilter is not None:
+            outputs += f"AntialiasFilter\t{self.AntialiasFilter}\n"
         outputs += f"InputFile\t{self.InputFile}\n"
         outputs += f"OutputFile\t{self.OutputFile}\n"
         outputs += f"TransformFile\t{self.TransformFile}\n"
