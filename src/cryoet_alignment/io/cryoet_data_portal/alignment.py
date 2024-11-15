@@ -56,7 +56,7 @@ class Alignment(FileIOBase):
     affine_transformation_matrix: List[List[float]]
     alignment_type: str
     format: str
-    is_canonical: bool
+    is_portal_standard: bool
     tilt_offset: float
     volume_offset: Dict[str, float]
     x_rotation_offset: float
@@ -140,7 +140,7 @@ class Alignment(FileIOBase):
             affine_transformation_matrix=affine_transform,
             alignment_type=alignment_type,
             format=format,
-            is_canonical=is_canonical,
+            is_portal_standard=is_canonical,
             tilt_offset=tilt_offset,
             volume_offset=volume_offset,
             x_rotation_offset=x_rotation_offset,
@@ -211,7 +211,7 @@ class Alignment(FileIOBase):
             affine_transformation_matrix=affine_transform,
             alignment_type=alignment_type,
             format=format,
-            is_canonical=is_canonical,
+            is_portal_standard=is_canonical,
             tilt_offset=tilt_offset,
             volume_offset=volume_offset,
             x_rotation_offset=x_rotation_offset,
@@ -228,10 +228,18 @@ class Alignment(FileIOBase):
     def to_imod(
         self,
         ts_size: Tuple[int, int, int],
-        ts_spacing: float,
+        ts_spacing: float = None,
         binning: int = 1,
-        basename: Optional[str] = None,
+        basename: str = None,
     ):
+        """Convert the alignment to IMOD format.
+
+        Args:
+            ts_size (Tuple[int, int, int]): The size of the tilt series in pixels/sections, (x, y, sections)
+            ts_spacing (float): The spacing of the tilt series in Angstrom.
+            binning (int): The binning factor.
+            basename (str): The base name of the output files.
+        """
         xf_info = []
         tlt_info = []
         xtlt_info = []
@@ -269,17 +277,20 @@ class Alignment(FileIOBase):
         tlt_path = f"{base}.tlt"
         xtlt_path = f"{base}.xtilt"
 
-        # Thickness in unbinned images
-        thickness = round(self.volume_dimension["z"] / ts_spacing)
-        tiltcom = ImodTILTCOM(
-            InputProjections=tilt_series_path,
-            OutputFile=volume_path,
-            TILTFILE=tlt_path,
-            XTILTFILE=xtlt_path,
-            THICKNESS=thickness,
-            FULLIMAGE=(ts_size[0], ts_size[1]),
-            EXCLUDELIST2=exclude,
-        )
+        if ts_spacing is not None:
+            # Thickness in unbinned images
+            thickness = round(self.volume_dimension["z"] / ts_spacing)
+            tiltcom = ImodTILTCOM(
+                InputProjections=tilt_series_path,
+                OutputFile=volume_path,
+                TILTFILE=tlt_path,
+                XTILTFILE=xtlt_path,
+                THICKNESS=thickness,
+                FULLIMAGE=(ts_size[0], ts_size[1]),
+                EXCLUDELIST2=exclude,
+            )
+        else:
+            tiltcom = None
 
         newstcom = ImodNEWSTCOM(
             AntialiasFilter=-1,
