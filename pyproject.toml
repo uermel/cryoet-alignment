@@ -9,8 +9,7 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
 ]
-#dynamic = ["version"]
-version = "0.0.7"
+dynamic = ["version"]
 dependencies = [
     "click",
     "fsspec>=2024.6.0",
@@ -19,6 +18,7 @@ dependencies = [
     "pydantic>=2",
     "s3fs",
     "pandas",
+    "cryoet-data-portal>=4.0.0",
 ]
 authors = [
   {name = "Utz H. Ermel", email = "utz.ermel@czii.org"},
@@ -33,6 +33,10 @@ Repository = "https://github.com/uermel/cryoet-alignment.git"
 Issues = "https://github.com/uermel/cryoet-alignment/issues"
 
 [project.optional-dependencies]
+cdp = [
+    "cryoet-data-portal>=4.0.0",
+    "zarr",
+]
 test = [
     "pytest",
     "pytest-cov",
@@ -51,8 +55,8 @@ docs = [
     "mkdocs-material",
 ]
 
-[project.scripts]
-make_templates = "copick.cli.make_templates:create [docs]"
+[tool.hatch.version]
+path = "src/copick/__init__.py"
 
 [tool.black]
 line-length = 120
