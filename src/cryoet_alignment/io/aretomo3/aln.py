@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from cryoet_alignment.io.base import FileIOBase
 
@@ -189,10 +189,15 @@ class AreTomo3ALN(FileIOBase):
     RawSize: Tuple[int, int, int]
     NumPatches: int
     DarkFrames: List[DarkFrameInfo]
-    AlphaOffset: float
-    BetaOffset: float
+    AlphaOffset: Optional[float] = Field(default=0.0)
+    BetaOffset: Optional[float] = Field(default=0.0)
     GlobalAlignments: List[GlobalAlignmentInfo]
     LocalAlignments: Optional[List[LocalAlignmentInfo]] = None
+
+    @field_validator("AlphaOffset", "BetaOffset")
+    @classmethod
+    def validate_offset(cls, value):
+        return 0.0 if value is None else value
 
     @classmethod
     def from_string(cls, text: str) -> "AreTomo3ALN":
