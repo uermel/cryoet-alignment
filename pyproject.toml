@@ -18,7 +18,7 @@ dependencies = [
     "pydantic>=2",
     "s3fs",
     "pandas",
-    "cryoet-data-portal>=4.1.0",
+    "cryoet-data-portal>=4.3.1",
 ]
 authors = [
   {name = "Utz H. Ermel", email = "utz.ermel@czii.org"},
@@ -34,7 +34,7 @@ Issues = "https://github.com/uermel/cryoet-alignment/issues"
 
 [project.optional-dependencies]
 cdp = [
-    "cryoet-data-portal>=4.1.0",
+    "cryoet-data-portal>=4.3.1",
     "zarr",
 ]
 test = [
