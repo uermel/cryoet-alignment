@@ -17,8 +17,8 @@ def aln_file() -> Tuple[Path, AreTomo3ALN]:
         RawSize=(2032, 2032, 90),
         NumPatches=16,
         DarkFrames=[
-            DarkFrameInfo(section_idx=0, val2=0, angle=-66.00),
-            DarkFrameInfo(section_idx=1, val2=0, angle=-64.50),
+            DarkFrameInfo(section_idx=1, val2=0, angle=-66.00),
+            DarkFrameInfo(section_idx=2, val2=0, angle=-64.50),
             DarkFrameInfo(section_idx=88, val2=0, angle=66.00),
             DarkFrameInfo(section_idx=89, val2=0, angle=67.50),
         ],
@@ -26,7 +26,7 @@ def aln_file() -> Tuple[Path, AreTomo3ALN]:
         BetaOffset=0.00,
         GlobalAlignments=[
             GlobalAlignmentInfo(
-                sec=0,
+                sec=1,
                 rot=-12.6611,
                 gmag=1.00000,
                 tx=24.786,
@@ -38,7 +38,7 @@ def aln_file() -> Tuple[Path, AreTomo3ALN]:
                 tilt=-61.50,
             ),
             GlobalAlignmentInfo(
-                sec=1,
+                sec=2,
                 rot=-12.6611,
                 gmag=1.00000,
                 tx=34.451,
@@ -50,7 +50,7 @@ def aln_file() -> Tuple[Path, AreTomo3ALN]:
                 tilt=-60.00,
             ),
             GlobalAlignmentInfo(
-                sec=2,
+                sec=3,
                 rot=-12.6611,
                 gmag=1.00000,
                 tx=9.951,
@@ -62,7 +62,7 @@ def aln_file() -> Tuple[Path, AreTomo3ALN]:
                 tilt=-58.50,
             ),
             GlobalAlignmentInfo(
-                sec=3,
+                sec=4,
                 rot=-12.6611,
                 gmag=1.00000,
                 tx=5.538,
