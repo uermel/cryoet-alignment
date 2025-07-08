@@ -37,7 +37,7 @@ class GlobalAlignmentInfo(BaseModel):
     @classmethod
     def from_string(cls, line: str):
         values = line.split()
-        sec = int(values[0]) - 1
+        sec = int(values[0])
         rot = float(values[1])
         gmag = float(values[2])
         tx = float(values[3])
@@ -56,7 +56,7 @@ class GlobalAlignmentInfo(BaseModel):
 
     def __str__(self):
         return (
-            f"{self.sec+1:>5}"
+            f"{self.sec:>5}"
             f"{self.rot:>11.4f}"
             f"{self.gmag:>11.5f}"
             f"{self.tx:>11.3f}"
