@@ -332,7 +332,7 @@ class Alignment(FileIOBase):
         for p in self.per_section_alignment_parameters:
             global_alignments.append(
                 GlobalAlignmentInfo(
-                    sec=p.z_index,
+                    sec=p.z_index + 1,  # AreTomo3 uses 1-based indexing
                     rot=p.tilt_axis_rotation,
                     gmag=1.0,
                     tx=p.x_offset,
