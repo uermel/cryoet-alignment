@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.1.0...cryoet-alignment-v0.1.1) (2025-11-03)
+
+
+### 🐞 Bug Fixes
+
+* remove pin to numpy&lt;2 ([#11](https://github.com/uermel/cryoet-alignment/issues/11)) ([1022419](https://github.com/uermel/cryoet-alignment/commit/10224198f81c7826a696c94e4da854e605914fb6))
+
 ## [0.1.0](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.0.10...cryoet-alignment-v0.1.0) (2025-07-08)
 
 
