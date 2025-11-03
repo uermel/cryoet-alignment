@@ -13,7 +13,7 @@ dynamic = ["version"]
 dependencies = [
     "click",
     "fsspec>=2024.6.0",
-    "numpy<2",
+    "numpy",
     "mrcfile",
     "pydantic>=2",
     "s3fs",
