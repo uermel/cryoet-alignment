@@ -850,7 +850,7 @@ requires-dist = [
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'" },
     { name = "mrcfile" },
     { name = "notebook", marker = "extra == 'dev'" },
-    { name = "numpy", specifier = "<2" },
+    { name = "numpy" },
     { name = "pandas" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pydantic", specifier = ">=2" },
