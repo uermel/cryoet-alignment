@@ -89,7 +89,7 @@ class ImodTILTCOM(FileIOBase):
             "THICKNESS": (r"^THICKNESS\s+([\d.]+)$", (1,)),
             "RADIAL": (r"^RADIAL\s+([\d.]+)\s+([\d.]+)$", (1, 2)),
             "FalloffIsTrueSigma": (r"^FalloffIsTrueSigma\s+(\d+)$", (1,)),
-            "XAXISTILT": (r"^XAXISTILT\s+([\d.]+)$", (1,)),
+            "XAXISTILT": (r"^XAXISTILT\s+(-?[\d.]+)$", (1,)),
             "SCALE": (r"^SCALE\s+([\d.]+)\s+([\d.]+)$", (1, 2)),
             "PERPENDICULAR": (r"^PERPENDICULAR.*$", ()),
             "MODE": (r"^MODE\s+(\d+)$", (1,)),
