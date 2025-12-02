@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.1.1...cryoet-alignment-v0.1.2) (2025-12-02)
+
+
+### 🐞 Bug Fixes
+
+* Allow for negative XAXISTILT values in imod .com files ([#10](https://github.com/uermel/cryoet-alignment/issues/10)) ([2e5e6af](https://github.com/uermel/cryoet-alignment/commit/2e5e6afa018d824f3fd960bc0814a8b6249936ea))
+
 ## [0.1.1](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.1.0...cryoet-alignment-v0.1.1) (2025-11-03)
 
 
