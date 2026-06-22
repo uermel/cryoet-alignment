@@ -37,6 +37,10 @@ cdp = [
     "cryoet-data-portal>=4.3.1",
     "zarr",
 ]
+warp = [
+    "warpylib",
+    "torch>=2.2",
+]
 test = [
     "pytest",
     "pytest-cov",

@@ -4,6 +4,7 @@ from typing import Union
 from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
+from cryoet_alignment.io.warp import WarpAlignment
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
 
@@ -82,11 +83,22 @@ def write_aretomo3_ctf(ctf: AreTomo3CTF, ctf_path: PATH_TYPE) -> None:
     ctf.to_file(ctf_path)
 
 
+def write_warp(warp: WarpAlignment, xml_path: PATH_TYPE) -> None:
+    """Write a Warp/warpylib alignment to an XML metadata file.
+
+    Args:
+        warp: The alignment object to write.
+        xml_path: The path to write the alignment file to.
+    """
+    warp.to_file(xml_path)
+
+
 WRITER = {
     "imod": write_imod_basename,
     "aretomo3": write_aretomo3,
     "aretomo3_ctf": write_aretomo3_ctf,
     "cdp": write_cdp,
+    "warp": write_warp,
 }
 
 INFER_WRITER = {
@@ -94,21 +106,23 @@ INFER_WRITER = {
     AreTomo3ALN: "aretomo3",
     AreTomo3CTF: "aretomo3_ctf",
     ImodAlignment: "imod",
+    WarpAlignment: "warp",
 }
 
 
 def write(
-    alignment: Union[Alignment, AreTomo3ALN, AreTomo3CTF, ImodAlignment],
+    alignment: Union[Alignment, AreTomo3ALN, AreTomo3CTF, ImodAlignment, WarpAlignment],
     path: PATH_TYPE,
     writer: str = None,
 ) -> None:
-    """Write alignment files in IMOD, AreTomo3, or CryoET Data Portal format.
+    """Write alignment files in IMOD, AreTomo3, CryoET Data Portal, or Warp format.
 
     Args:
         alignment: The alignment object to write.
         path: The path to write the alignment file to.
-        writer: The writer to use for the alignment file (one of "imod", "aretomo3", "aretomo3_ctf" or "cdp"). If None,
-        the writer will be inferred from the alignment object type.
+        writer: The writer to use for the alignment file (one of "imod", "aretomo3",
+        "aretomo3_ctf", "cdp", or "warp"). If None, the writer will be inferred from
+        the alignment object type.
     """
     if writer is None:
         writer = INFER_WRITER[type(alignment)]
