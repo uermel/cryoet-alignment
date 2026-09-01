@@ -18,6 +18,7 @@ dependencies = [
     "pydantic>=2",
     "s3fs",
     "pandas",
+    "starfile>=0.5",
     "cryoet-data-portal>=4.3.1",
 ]
 authors = [

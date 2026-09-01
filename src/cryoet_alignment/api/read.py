@@ -4,6 +4,7 @@ from typing import Union
 from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
+from cryoet_alignment.io.relion import RelionAlignment
 from cryoet_alignment.io.warp import WarpAlignment
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
@@ -73,7 +74,7 @@ def read_cdp(cdp_path: PATH_TYPE) -> Alignment:
     Returns:
         Alignment: The alignment object.
     """
-    return Alignment.from_cdp(cdp_path)
+    return Alignment.from_file(cdp_path)
 
 
 def read_aretomo3_ctf(ctf_path: PATH_TYPE) -> AreTomo3CTF:
@@ -102,21 +103,46 @@ def read_warp(xml_path: PATH_TYPE, pixel_size_a: float = None) -> WarpAlignment:
     return WarpAlignment.from_file(xml_path, pixel_size_a=pixel_size_a)
 
 
+def read_relion(
+    tomograms_star: PATH_TYPE,
+    tomo_name: str = None,
+    image_size_px: tuple = None,
+) -> RelionAlignment:
+    """Read a RELION 5 tilt-series alignment from a tomograms.star.
+
+    Args:
+        tomograms_star: The path to the tomograms.star (RELION-5 layout with
+            rlnTomoTiltSeriesStarFile references, or the relion-4/WarpTools
+            layout with embedded per-tomogram blocks).
+        tomo_name: Which tomogram to load when the file lists several.
+        image_size_px: Tilt-image (nx, ny) in px — required only when the
+            per-tilt table carries projection matrices instead of Euler columns.
+
+    Returns:
+        RelionAlignment: The alignment object.
+    """
+    return RelionAlignment.from_file(tomograms_star, tomo_name=tomo_name, image_size_px=image_size_px)
+
+
 READER = {
     "imod": read_imod_basename,
     "aretomo3": read_aretomo3,
     "aretomo3_ctf": read_aretomo3_ctf,
     "cdp": read_cdp,
     "warp": read_warp,
+    "relion": read_relion,
 }
 
 # Note: _CTF.txt is intentionally NOT auto-inferred — ``.txt`` is too generic.
 # Pass ``reader="aretomo3_ctf"`` explicitly.
 # Note: ``.xml`` is intentionally NOT auto-inferred — it is too generic and could
 # collide with non-Warp XML formats. Pass ``reader="warp"`` explicitly.
+# ``.star`` IS inferred: within this package's scope a .star file is a RELION
+# tomograms.star.
 INFER_READER = {
     ".aln": "aretomo3",
     ".json": "cdp",
+    ".star": "relion",
 }
 
 
@@ -124,19 +150,21 @@ def read(
     path: PATH_TYPE,
     reader: str = None,
     **kwargs,
-) -> Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, WarpAlignment]:
-    """Read alignment files in IMOD, AreTomo3, CryoET Data Portal, or Warp format.
+) -> Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, RelionAlignment, WarpAlignment]:
+    """Read alignment files in IMOD, AreTomo3, CryoET Data Portal, RELION, or Warp format.
 
     Args:
         path: The path to the alignment file (or basename for IMOD).
         reader: The reader to use for the alignment file (one of "imod", "aretomo3",
-        "aretomo3_ctf", "cdp", or "warp"). If None, the reader will be inferred from the file extension.
+        "aretomo3_ctf", "cdp", "relion", or "warp"). If None, the reader will be inferred
+        from the file extension (".aln", ".json", ".star").
         Note: ``.xml`` and _CTF.txt are not auto-inferred — pass the reader explicitly.
         **kwargs: Passed through to the selected reader (e.g. ``pixel_size_a``
-        for ``reader="warp"``).
+        for ``reader="warp"``; ``tomo_name``/``image_size_px`` for ``reader="relion"``).
 
     Returns:
-        Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, WarpAlignment]: The alignment object.
+        Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, RelionAlignment, WarpAlignment]:
+        The alignment object.
     """
     if reader is None:
         _, ext = os.path.splitext(path)

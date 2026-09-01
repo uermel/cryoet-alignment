@@ -10,6 +10,7 @@ from cryoet_alignment.io.aretomo3.aln import DarkFrameInfo, GlobalAlignmentInfo
 from cryoet_alignment.io.base import PATH_TYPE, FileIOBase
 from cryoet_alignment.io.imod import ImodAlignment, ImodNEWSTCOM, ImodTILTCOM, ImodTLT, ImodXF, ImodXTILT
 from cryoet_alignment.io.imod.xf import ImodXFInfo
+from cryoet_alignment.io.relion import RelionAlignment, RelionAlignmentEntry
 from cryoet_alignment.io.warp import WarpAlignment, WarpAlignmentEntry
 from cryoet_alignment.util.image import get_mrc_header_local
 
@@ -331,6 +332,80 @@ class Alignment(FileIOBase):
         warp = WarpAlignment.from_file(xml_path, pixel_size_a=pixel_size_a)
         return cls.from_warp(warp=warp, vol=vol, vol_size=vol_size)
 
+    @classmethod
+    def from_relion(
+        cls,
+        relion: RelionAlignment,
+        vol: Optional[str] = None,
+        vol_size: Tuple[float, float, float] = None,
+    ):
+        """Convert a RelionAlignment to the canonical Alignment format.
+
+        Label-level mapping, identical to RELION's own AreTomo importer
+        (align_tiltseries_runner.cpp): ``tilt_angle = rlnTomoYTilt``,
+        ``tilt_axis_rotation = rlnTomoZRot``, ``volume_x_rotation = rlnTomoXTilt``,
+        offsets = shift_angst / pixel_size (Angstrom -> px). No sign flips and no
+        center corrections (for ODD tomogram/image dimensions the RELION and
+        AreTomo/Warp projection centers differ by up to 0.5 px).
+
+        Args:
+            relion: ``RelionAlignment`` to convert.
+            vol: Optional path to a reconstructed MRC volume — its header determines
+                the ``volume_dimension``. Mutually exclusive with ``vol_size``.
+            vol_size: ``(x, y, z)`` volume dimensions in pixels. If neither is
+                provided, derives from ``relion.volume_size_px``.
+        """
+        if vol is not None:
+            header = get_mrc_header_local(vol)
+            x = header.cella.x / header.mx * header.nx
+            y = header.cella.y / header.my * header.ny
+            z = header.cella.z / header.mz * header.nz
+        elif vol_size is not None:
+            x, y, z = vol_size[0], vol_size[1], vol_size[2]
+        else:
+            x, y, z = relion.volume_size_px
+
+        per_section_alignment_parameters = []
+        for e in relion.entries:
+            per_section_alignment_parameters.append(
+                PerSectionAlignmentParameters(
+                    z_index=e.z_index,
+                    tilt_angle=e.y_tilt,
+                    volume_x_rotation=e.x_tilt,
+                    in_plane_rotation=ang2mat(e.z_rot).tolist(),
+                    x_offset=e.x_shift_angst / relion.pixel_size_a,
+                    y_offset=e.y_shift_angst / relion.pixel_size_a,
+                ),
+            )
+
+        return cls(
+            affine_transformation_matrix=np.eye(4, 4).tolist(),
+            alignment_type="GLOBAL",
+            format="RELION",
+            is_portal_standard=True,
+            tilt_offset=0,
+            volume_offset={"x": 0, "y": 0, "z": 0},
+            x_rotation_offset=0,
+            per_section_alignment_parameters=per_section_alignment_parameters,
+            volume_dimension={"x": x, "y": y, "z": z},
+        )
+
+    @classmethod
+    def from_relion_file(
+        cls,
+        tomograms_star: PATH_TYPE,
+        tomo_name: str = None,
+        image_size_px: Tuple[int, int] = None,
+        vol: Optional[str] = None,
+        vol_size: Tuple[float, float, float] = None,
+    ):
+        """Load a RELION tomograms.star and convert one tomogram to the canonical
+        Alignment format. ``tomo_name`` selects the tomogram when the file lists
+        several; ``image_size_px`` is required only for matrix-only tables (see
+        ``RelionAlignment.from_file``)."""
+        relion = RelionAlignment.from_file(tomograms_star, tomo_name=tomo_name, image_size_px=image_size_px)
+        return cls.from_relion(relion, vol=vol, vol_size=vol_size)
+
     def to_imod(
         self,
         ts_size: Tuple[int, int, int],
@@ -498,6 +573,71 @@ class Alignment(FileIOBase):
             pixel_size_a=pixel_size_a,
             image_dimensions_physical=image_dims,
             volume_dimensions_physical=volume_dims,
+            entries=entries,
+        )
+
+    def to_relion(
+        self,
+        tomo_name: str,
+        pixel_size_a: float,
+        hand: float = -1.0,
+        voltage: float = 300.0,
+        spherical_aberration: float = 2.7,
+        amplitude_contrast: float = 0.07,
+        pre_exposures: Optional[List[float]] = None,
+    ) -> RelionAlignment:
+        """Convert the alignment to RELION 5 format (GLOBAL alignment only).
+
+        Inverse of ``from_relion``: ``rlnTomoYTilt = tilt_angle``,
+        ``rlnTomoZRot = tilt_axis_rotation``, ``rlnTomoXTilt = volume_x_rotation``,
+        shifts = offsets * pixel_size (px -> Angstrom); the refined tilt angle is
+        also written as ``rlnTomoNominalStageTiltAngle`` (the canonical model
+        carries no separate nominal angle). Absent ``z_index`` rows (dark tilts)
+        are simply not emitted — RELION tables carry kept tilts only.
+
+        Args:
+            tomo_name: rlnTomoName for the emitted tables.
+            pixel_size_a: Tilt-series pixel size in Angstrom/px.
+            hand: rlnTomoHand. Metadata passthrough — defaults to RELION's own
+                import default (-1); override to match your data.
+            voltage: rlnVoltage in kV (metadata passthrough, common Krios value).
+            spherical_aberration: rlnSphericalAberration in mm (passthrough).
+            amplitude_contrast: rlnAmplitudeContrast (passthrough).
+            pre_exposures: Optional per-tilt cumulative dose in e/A^2, in the
+                order of the emitted sections; zeros when omitted (RELION requires
+                the column to exist).
+        """
+        params = sorted(self.per_section_alignment_parameters, key=lambda p: p.z_index)
+        if pre_exposures is not None and len(pre_exposures) != len(params):
+            raise ValueError(f"pre_exposures has {len(pre_exposures)} values for {len(params)} sections")
+
+        entries: List[RelionAlignmentEntry] = []
+        for i, p in enumerate(params):
+            entries.append(
+                RelionAlignmentEntry(
+                    z_index=i,
+                    nominal_stage_tilt_angle=p.tilt_angle,
+                    x_tilt=p.volume_x_rotation,
+                    y_tilt=p.tilt_angle,
+                    z_rot=p.tilt_axis_rotation,
+                    x_shift_angst=p.x_offset * pixel_size_a,
+                    y_shift_angst=p.y_offset * pixel_size_a,
+                    pre_exposure=pre_exposures[i] if pre_exposures is not None else 0.0,
+                ),
+            )
+
+        return RelionAlignment(
+            tomo_name=tomo_name,
+            pixel_size_a=pixel_size_a,
+            volume_size_px=(
+                round(self.volume_dimension["x"]),
+                round(self.volume_dimension["y"]),
+                round(self.volume_dimension["z"]),
+            ),
+            hand=hand,
+            voltage=voltage,
+            spherical_aberration=spherical_aberration,
+            amplitude_contrast=amplitude_contrast,
             entries=entries,
         )
 
