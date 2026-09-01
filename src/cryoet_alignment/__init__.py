@@ -1,4 +1,4 @@
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 from cryoet_alignment.api.read import read
 from cryoet_alignment.api.write import write

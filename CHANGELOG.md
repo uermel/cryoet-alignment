@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.1.2...cryoet-alignment-v0.2.0) (2026-09-01)
+
+
+### ✨ Features
+
+* add the AreTomo3 _CTF.txt CTF model ([#17](https://github.com/uermel/cryoet-alignment/issues/17)) ([8ec16c1](https://github.com/uermel/cryoet-alignment/commit/8ec16c13c7b7b1511be2b7b31f09643741b9bbee))
+* parse and emit the AreTomo3 Thickness header line ([#16](https://github.com/uermel/cryoet-alignment/issues/16)) ([79db879](https://github.com/uermel/cryoet-alignment/commit/79db879b5773987fc522894b555ad55f5cf718ac))
+* **relion:** support RELION 5 tilt-series alignments ([#19](https://github.com/uermel/cryoet-alignment/issues/19)) ([8fdce32](https://github.com/uermel/cryoet-alignment/commit/8fdce32512e5b9f4fae5fea60e7eb9d363843b7e))
+* Support warp alignments ([#14](https://github.com/uermel/cryoet-alignment/issues/14)) ([57bb0d2](https://github.com/uermel/cryoet-alignment/commit/57bb0d2fd9fbe6a6e78955de0afa81edfc250fea))
+
+
+### 🧹 Miscellaneous Chores
+
+* **ci:** fix pre-commit job — asdf@v4 and actually run action-validator ([#15](https://github.com/uermel/cryoet-alignment/issues/15)) ([84cbbb9](https://github.com/uermel/cryoet-alignment/commit/84cbbb95e94847f93d24c997ed1bea5352caab12))
+
 ## [0.1.2](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.1.1...cryoet-alignment-v0.1.2) (2025-12-02)
 
 
