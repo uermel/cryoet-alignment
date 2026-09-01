@@ -181,6 +181,8 @@ class AreTomo3ALN(FileIOBase):
         DarkFrames (List[DarkFrameInfo]): List of dark frames (discarded for reconstruction).
         AlphaOffset (float): Alpha offset for the reconstruction.
         BetaOffset (float): Beta offset for the reconstruction.
+        Thickness (int): Estimated sample thickness in raw tilt-series pixels
+            (written by AreTomo3; absent in older files).
         GlobalAlignments (List[GlobalAlignmentInfo]): List of global alignments.
         LocalAlignments (List[LocalAlignmentInfo]): List of local alignments.
     """
@@ -191,6 +193,7 @@ class AreTomo3ALN(FileIOBase):
     DarkFrames: List[DarkFrameInfo]
     AlphaOffset: Optional[float] = Field(default=0.0)
     BetaOffset: Optional[float] = Field(default=0.0)
+    Thickness: Optional[int] = Field(default=None)
     GlobalAlignments: List[GlobalAlignmentInfo]
     LocalAlignments: Optional[List[LocalAlignmentInfo]] = None
 
@@ -210,6 +213,7 @@ class AreTomo3ALN(FileIOBase):
         dark_frames = []
         alpha_offset = None
         beta_offset = None
+        thickness = None
         global_alignments = []
         local_alignments = []
         section = None
@@ -233,6 +237,9 @@ class AreTomo3ALN(FileIOBase):
             elif line.startswith("# BetaOffset"):
                 beta_offset = float(line.split("=")[1])
                 continue
+            elif line.startswith("# Thickness"):
+                thickness = int(float(line.split("=")[1]))
+                continue
             elif line.startswith("# SEC"):
                 section = "GlobalAlignment"
                 continue
@@ -252,6 +259,7 @@ class AreTomo3ALN(FileIOBase):
             DarkFrames=dark_frames,
             AlphaOffset=alpha_offset,
             BetaOffset=beta_offset,
+            Thickness=thickness,
             GlobalAlignments=global_alignments,
             LocalAlignments=local_alignments,
         )
@@ -267,7 +275,8 @@ class AreTomo3ALN(FileIOBase):
             f"{dark_frames}\n"
             f"# AlphaOffset ={self.AlphaOffset:>9.2f}\n"
             f"# BetaOffset ={self.BetaOffset:>9.2f}\n"
-            "# SEC     ROT         GMAG       TX          TY      SMEAN     SFIT    SCALE     BASE     TILT\n"
+            + (f"# Thickness = {self.Thickness}\n" if self.Thickness is not None else "")
+            + "# SEC     ROT         GMAG       TX          TY      SMEAN     SFIT    SCALE     BASE     TILT\n"
             f"{global_alignments}\n"
             "# Local Alignment\n"
             f"{local_alignments}\n"
