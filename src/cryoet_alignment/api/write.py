@@ -4,6 +4,7 @@ from typing import Union
 from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
+from cryoet_alignment.io.relion import RelionAlignment
 from cryoet_alignment.io.warp import WarpAlignment
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
@@ -93,12 +94,24 @@ def write_warp(warp: WarpAlignment, xml_path: PATH_TYPE) -> None:
     warp.to_file(xml_path)
 
 
+def write_relion(relion: RelionAlignment, tomograms_star: PATH_TYPE) -> None:
+    """Write a RELION 5 tilt-series alignment in the RELION-5 two-file layout.
+
+    Args:
+        relion: The alignment object to write.
+        tomograms_star: The path to write the tomograms.star to; the per-tilt
+            table is written to ``tilt_series/<tomo_name>.star`` next to it.
+    """
+    relion.to_file(tomograms_star)
+
+
 WRITER = {
     "imod": write_imod_basename,
     "aretomo3": write_aretomo3,
     "aretomo3_ctf": write_aretomo3_ctf,
     "cdp": write_cdp,
     "warp": write_warp,
+    "relion": write_relion,
 }
 
 INFER_WRITER = {
@@ -107,22 +120,23 @@ INFER_WRITER = {
     AreTomo3CTF: "aretomo3_ctf",
     ImodAlignment: "imod",
     WarpAlignment: "warp",
+    RelionAlignment: "relion",
 }
 
 
 def write(
-    alignment: Union[Alignment, AreTomo3ALN, AreTomo3CTF, ImodAlignment, WarpAlignment],
+    alignment: Union[Alignment, AreTomo3ALN, AreTomo3CTF, ImodAlignment, RelionAlignment, WarpAlignment],
     path: PATH_TYPE,
     writer: str = None,
 ) -> None:
-    """Write alignment files in IMOD, AreTomo3, CryoET Data Portal, or Warp format.
+    """Write alignment files in IMOD, AreTomo3, CryoET Data Portal, RELION, or Warp format.
 
     Args:
         alignment: The alignment object to write.
         path: The path to write the alignment file to.
         writer: The writer to use for the alignment file (one of "imod", "aretomo3",
-        "aretomo3_ctf", "cdp", or "warp"). If None, the writer will be inferred from
-        the alignment object type.
+        "aretomo3_ctf", "cdp", "relion", or "warp"). If None, the writer will be
+        inferred from the alignment object type.
     """
     if writer is None:
         writer = INFER_WRITER[type(alignment)]

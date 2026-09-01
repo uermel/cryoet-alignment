@@ -6,6 +6,7 @@ Supported formats:
 - IMOD
 - AreTomo3
 - Warp (global tilt-series alignment)
+- RELION 5 (global tilt-series alignment)
 - cryoet-data-portal
 
 # Installation
@@ -88,6 +89,25 @@ warp_alignment = read("/path/to/tilt_series.xml", reader="warp", pixel_size_a=1.
 write(warp_alignment, "/path/to/tilt_series.xml")
 ```
 
+### RELION 5
+RELION 5 stores tilt-series metadata in a `tomograms.star` plus per-tomogram star files. Both on-disk layouts are read:
+the RELION-5 layout (`rlnTomoTiltSeriesStarFile` references) and the relion-4/WarpTools layout (per-tomogram blocks
+embedded in one file), including relion-4 projection matrices (`rlnTomoProjX/Y/Z/W`), which are decomposed into Euler
+angles and shifts exactly like RELION does it. Only the global alignment is modeled. Writing emits the RELION-5
+two-file layout (`tomograms.star` + `tilt_series/<name>.star`). Pass `tomo_name` when the file lists several tomograms,
+and `image_size_px` when the per-tilt table carries matrices instead of Euler columns.
+
+```python
+from cryoet_alignment import read
+from cryoet_alignment import write
+
+# Read a RELION tomograms.star (one tomogram)
+relion_alignment = read("/path/to/tomograms.star", tomo_name="TS_01")
+
+# Write the RELION-5 two-file layout
+write(relion_alignment, "/path/to/out/tomograms.star")
+```
+
 ### cryoet-data-portal
 Alignment information from the cryoet-data-portal is stored in a JSON file with a schema described here. This file can
 be read and written as shown below.
@@ -136,6 +156,19 @@ cdp_alignment = Alignment.from_aretomo3(read("/path/to/alignment_file.aln"), vol
 # Convert to Warp and write the tilt-series XML
 warp_alignment = cdp_alignment.to_warp(pixel_size_a=1.54, image_size_px=(4096, 4096))
 write(warp_alignment, "/path/to/tilt_series.xml")
+```
+
+### AreTomo3 to RELION
+```python
+from cryoet_alignment import read, write
+from cryoet_alignment.io.cryoet_data_portal import Alignment
+
+# Read the AreTomo3 alignment and convert to the canonical format
+cdp_alignment = Alignment.from_aretomo3(read("/path/to/alignment_file.aln"), vol_size=(4096, 4096, 2000))
+
+# Convert to RELION and write tomograms.star + tilt_series/TS_01.star
+relion_alignment = cdp_alignment.to_relion("TS_01", pixel_size_a=1.54)
+write(relion_alignment, "/path/to/out/tomograms.star")
 ```
 
 ### cryoet-data-portal to IMOD
