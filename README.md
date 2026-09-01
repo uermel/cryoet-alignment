@@ -55,6 +55,20 @@ aretomo3_alignment = read("/path/to/alignment_file.aln")
 write(aretomo3_alignment, "/path/to/alignment_file.aln")
 ```
 
+AreTomo3's per-tilt CTF estimates (`<name>_CTF.txt`, one row per raw tilt including dark frames) can also be read and
+written. Because the `.txt` extension is generic, the reader is never inferred — pass `reader="aretomo3_ctf"` explicitly.
+
+```python
+from cryoet_alignment import read
+from cryoet_alignment import write
+
+# Read AreTomo3 CTF estimates
+aretomo3_ctf = read("/path/to/name_CTF.txt", reader="aretomo3_ctf")
+
+# Write AreTomo3 CTF file
+write(aretomo3_ctf, "/path/to/name_CTF.txt")
+```
+
 ### cryoet-data-portal
 Alignment information from the cryoet-data-portal is stored in a JSON file with a schema described here. This file can
 be read and written as shown below.

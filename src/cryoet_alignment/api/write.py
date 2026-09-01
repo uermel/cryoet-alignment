@@ -1,7 +1,7 @@
 import os
 from typing import Union
 
-from cryoet_alignment.io.aretomo3 import AreTomo3ALN
+from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
 
@@ -72,27 +72,43 @@ def write_cdp(ali: Alignment, cdp_path: PATH_TYPE) -> None:
         f.write(str(ali))
 
 
+def write_aretomo3_ctf(ctf: AreTomo3CTF, ctf_path: PATH_TYPE) -> None:
+    """Write per-tilt CTF estimates in AreTomo3 _CTF.txt format.
+
+    Args:
+        ctf: The CTF object to write.
+        ctf_path: The path to write the _CTF.txt file to.
+    """
+    ctf.to_file(ctf_path)
+
+
 WRITER = {
     "imod": write_imod_basename,
     "aretomo3": write_aretomo3,
+    "aretomo3_ctf": write_aretomo3_ctf,
     "cdp": write_cdp,
 }
 
 INFER_WRITER = {
     Alignment: "cdp",
     AreTomo3ALN: "aretomo3",
+    AreTomo3CTF: "aretomo3_ctf",
     ImodAlignment: "imod",
 }
 
 
-def write(alignment: Union[Alignment, AreTomo3ALN, ImodAlignment], path: PATH_TYPE, writer: str = None) -> None:
+def write(
+    alignment: Union[Alignment, AreTomo3ALN, AreTomo3CTF, ImodAlignment],
+    path: PATH_TYPE,
+    writer: str = None,
+) -> None:
     """Write alignment files in IMOD, AreTomo3, or CryoET Data Portal format.
 
     Args:
         alignment: The alignment object to write.
         path: The path to write the alignment file to.
-        writer: The writer to use for the alignment file (one of "imod", "aretomo3" or "cdp"). If None, the writer will
-        be inferred from the alignment object type.
+        writer: The writer to use for the alignment file (one of "imod", "aretomo3", "aretomo3_ctf" or "cdp"). If None,
+        the writer will be inferred from the alignment object type.
     """
     if writer is None:
         writer = INFER_WRITER[type(alignment)]
