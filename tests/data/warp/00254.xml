@@ -1,0 +1,409 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TiltSeries DataDirectory="/projects/site/gred/cryoet/tegunovd/relay-empiar-10499/3" AreAnglesInverted="False" PlaneNormal="0, 0, 0" LevelAngleX="0" LevelAngleY="0" Bfactor="0" Weight="1" MagnificationCorrection="1, 0, 0, 1" UnselectFilter="False" UnselectManual="" CTFResolutionEstimate="0">
+	<Angles>-60.01
+-57
+-54
+-51
+-48.01
+-45
+-42
+-39
+-36.01
+-33.01
+-30.01
+-27.01
+-24.01
+-21.01
+-18.01
+-15.01
+-12.01
+-9.01
+-6.01
+-3.01
+-0.01
+2.99
+5.99
+8.98
+11.99
+14.98
+17.98
+20.98
+23.98
+26.98
+29.98
+32.98
+35.98
+38.98
+41.99
+44.98
+47.98
+50.98
+53.98
+56.99
+59.98</Angles>
+	<Dose>117
+114
+105
+102
+93
+90
+81
+78
+69
+66
+57
+54
+45
+42
+33
+30
+21
+18
+9
+6
+0
+3
+12
+15
+24
+27
+36
+39
+48
+51
+60
+63
+72
+75
+84
+87
+96
+99
+108
+111
+120</Dose>
+	<UseTilt>True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True
+True</UseTilt>
+	<AxisAngle>-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735
+-4.2999735</AxisAngle>
+	<AxisOffsetX>271.82022
+228.63171
+179.59485
+82.4202
+84.14583
+26.213682
+72.66027
+71.67096
+81.591606
+44.68826
+78.96127
+60.442806
+81.05269
+78.74628
+103.06018
+79.90863
+79.07425
+112.50305
+87.9832
+156.75662
+27.325233
+-89.43283
+-121.95347
+-45.934425
+-46.234177
+-54.619087
+-115.59162
+-64.5185
+-86.19582
+-78.225235
+-101.655365
+-133.65323
+-126.50058
+-117.74739
+-121.218864
+-172.45334
+-184.95193
+-239.71329
+-246.29137
+-273.73477
+-281.4533</AxisOffsetX>
+	<AxisOffsetY>1.5337157
+-3.8933659
+-4.277749
+9.97837
+3.3202398
+-2.4022186
+0.34302592
+1.1895859
+2.55961
+10.569107
+-3.8813047
+6.8373528
+4.1946216
+11.397829
+0.53423166
+9.385012
+-12.915207
+-17.253855
+2.740891
+3.0051243
+11.71418
+14.656778
+10.93464
+0.46539247
+-0.053593516
+-1.13796
+23.924208
+2.975862
+4.625834
+4.467768
+-3.056665
+3.641336
+-1.6598809
+-4.2133684
+1.2322468
+5.8968496
+-4.284691
+2.821225
+-10.643468
+-12.992425
+-26.020374</AxisOffsetY>
+	<MoviePath>../2/TS_01_041_-60.0.tif
+../2/TS_01_040_-57.0.tif
+../2/TS_01_037_-54.0.tif
+../2/TS_01_036_-51.0.tif
+../2/TS_01_033_-48.0.tif
+../2/TS_01_032_-45.0.tif
+../2/TS_01_029_-42.0.tif
+../2/TS_01_028_-39.0.tif
+../2/TS_01_025_-36.0.tif
+../2/TS_01_024_-33.0.tif
+../2/TS_01_021_-30.0.tif
+../2/TS_01_020_-27.0.tif
+../2/TS_01_017_-24.0.tif
+../2/TS_01_016_-21.0.tif
+../2/TS_01_013_-18.0.tif
+../2/TS_01_012_-15.0.tif
+../2/TS_01_009_-12.0.tif
+../2/TS_01_008_-9.0.tif
+../2/TS_01_005_-6.0.tif
+../2/TS_01_004_-3.0.tif
+../2/TS_01_002_-0.0.tif
+../2/TS_01_003_3.0.tif
+../2/TS_01_006_6.0.tif
+../2/TS_01_007_9.0.tif
+../2/TS_01_010_12.0.tif
+../2/TS_01_011_15.0.tif
+../2/TS_01_014_18.0.tif
+../2/TS_01_015_21.0.tif
+../2/TS_01_018_24.0.tif
+../2/TS_01_019_27.0.tif
+../2/TS_01_022_30.0.tif
+../2/TS_01_023_33.0.tif
+../2/TS_01_026_36.0.tif
+../2/TS_01_027_39.0.tif
+../2/TS_01_030_42.0.tif
+../2/TS_01_031_45.0.tif
+../2/TS_01_034_48.0.tif
+../2/TS_01_035_51.0.tif
+../2/TS_01_038_54.0.tif
+../2/TS_01_039_57.0.tif
+../2/TS_01_042_60.0.tif</MoviePath>
+	<FOVFraction>0.9207
+0.9206
+0.9206
+0.9207
+0.9207
+0.9208
+0.9208
+0.9207
+0.9207
+0.9206
+0.9205
+0.919
+0.9142
+0.908
+0.8992
+0.8925
+0.8849
+0.8761
+0.8732
+0.8664
+0.8711
+0.8699
+0.8714
+0.8794
+0.8863
+0.8934
+0.8975
+0.9086
+0.914
+0.9183
+0.9201
+0.9207
+0.9206
+0.9206
+0.9206
+0.9207
+0.9207
+0.9204
+0.9205
+0.9207
+0.9207</FOVFraction>
+	<SimulatedScale>0|1;1|1</SimulatedScale>
+	<CTF>
+		<Param Name="PixelSize" Value="1.0" />
+		<Param Name="ZernikeCoeffsOdd" Value="" />
+		<Param Name="BeamTilt2" Value="1,0,1" />
+		<Param Name="BeamTilt" Value="0,0" />
+		<Param Name="PhaseShift" Value="0" />
+		<Param Name="Scale" Value="1.0" />
+		<Param Name="BfactorAngle" Value="0" />
+		<Param Name="BfactorDelta" Value="0" />
+		<Param Name="Bfactor" Value="0" />
+		<Param Name="ZernikeCoeffsEven" Value="" />
+		<Param Name="Amplitude" Value="0.07" />
+		<Param Name="DefocusDelta" Value="0" />
+		<Param Name="Defocus" Value="1.0" />
+		<Param Name="Voltage" Value="300.0" />
+		<Param Name="Cc" Value="2.7" />
+		<Param Name="Cs" Value="2.7" />
+		<Param Name="Distortion" Value="1, 0, 0, 1" />
+		<Param Name="PixelSizeAngle" Value="0" />
+		<Param Name="PixelSizeDeltaPercent" Value="0" />
+		<Param Name="DefocusAngle" Value="0" />
+		<Param Name="Thickness" Value="0" />
+	</CTF>
+	<GridCTF Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridCTF>
+	<GridCTFDefocusDelta Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridCTFDefocusDelta>
+	<GridCTFDefocusAngle Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridCTFDefocusAngle>
+	<GridCTFPhase Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridCTFPhase>
+	<GridMovementX Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridMovementX>
+	<GridMovementY Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridMovementY>
+	<GridVolumeWarpX Width="1" Height="1" Depth="1" Duration="1">
+		<Node X="0" Y="0" Z="0" W="0" Value="0" />
+	</GridVolumeWarpX>
+	<GridVolumeWarpY Width="1" Height="1" Depth="1" Duration="1">
+		<Node X="0" Y="0" Z="0" W="0" Value="0" />
+	</GridVolumeWarpY>
+	<GridVolumeWarpZ Width="1" Height="1" Depth="1" Duration="1">
+		<Node X="0" Y="0" Z="0" W="0" Value="0" />
+	</GridVolumeWarpZ>
+	<GridAngleX Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridAngleX>
+	<GridAngleY Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridAngleY>
+	<GridAngleZ Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridAngleZ>
+	<GridDoseBfacs Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridDoseBfacs>
+	<GridDoseBfacsDelta Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridDoseBfacsDelta>
+	<GridDoseBfacsAngle Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridDoseBfacsAngle>
+	<GridDoseWeights Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="1" />
+	</GridDoseWeights>
+	<GridLocationBfacs Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="0" />
+	</GridLocationBfacs>
+	<GridLocationWeights Width="1" Height="1" Depth="1" MarginX="0" MarginY="0" MarginZ="0">
+		<Node X="0" Y="0" Z="0" Value="1" />
+	</GridLocationWeights>
+</TiltSeries>

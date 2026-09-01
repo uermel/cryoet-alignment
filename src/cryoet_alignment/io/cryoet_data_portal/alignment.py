@@ -7,10 +7,24 @@ from pydantic import BaseModel
 
 from cryoet_alignment.io.aretomo3 import AreTomo3ALN
 from cryoet_alignment.io.aretomo3.aln import DarkFrameInfo, GlobalAlignmentInfo
-from cryoet_alignment.io.base import FileIOBase
+from cryoet_alignment.io.base import PATH_TYPE, FileIOBase
 from cryoet_alignment.io.imod import ImodAlignment, ImodNEWSTCOM, ImodTILTCOM, ImodTLT, ImodXF, ImodXTILT
 from cryoet_alignment.io.imod.xf import ImodXFInfo
+from cryoet_alignment.io.warp import WarpAlignment, WarpAlignmentEntry
 from cryoet_alignment.util.image import get_mrc_header_local
+
+# Sign convention for the Warp tilt-axis-angle field, validated against AreTomo's
+# .aln ROT column on a known-good reconstruction. Flip to -1 if a future validation
+# experiment determines that the AreTomo ↔ Warp recipe needs a sign inversion. This
+# is the single source of truth for that convention across the library.
+WARP_TILT_AXIS_SIGN: int = 1
+
+# Sign convention for the Warp tilt-angle field. Empirically the Warp reconstruction
+# convention is opposite to AreTomo's for the tilt angle (independent of the in-plane
+# rotation handled by WARP_TILT_AXIS_SIGN). Applied symmetrically in to_warp and
+# from_warp so the AreTomo round-trip still sees the original AreTomo-coordinate
+# tilt angles.
+WARP_TILT_ANGLE_SIGN: int = -1
 
 
 def ang2mat(angle):
@@ -225,6 +239,98 @@ class Alignment(FileIOBase):
         vol_path = f"{basename}_Vol.mrc"
         return cls.from_aretomo3(vol=vol_path, aln=aln)
 
+    @classmethod
+    def from_warp(
+        cls,
+        warp: WarpAlignment,
+        vol: Optional[str] = None,
+        vol_size: Tuple[float, float, float] = None,
+    ):
+        """Convert a WarpAlignment to the canonical Alignment format.
+
+        Args:
+            warp: ``WarpAlignment`` to convert.
+            vol: Optional path to a reconstructed MRC volume — its header determines
+                the ``volume_dimension``. Mutually exclusive with ``vol_size``.
+            vol_size: ``(x, y, z)`` volume dimensions in pixels. If neither ``vol`` nor
+                ``vol_size`` is provided, derives from ``warp.volume_dimensions_physical``
+                divided by ``warp.pixel_size_a``.
+
+        Note:
+            Warp local fields (per-image 2D warp grids and 3D volume warp grids) are
+            not represented in ``Alignment`` and are dropped here.
+        """
+        affine_transform = np.eye(4, 4).tolist()
+        alignment_type = "GLOBAL"
+        format = "WARP"
+        is_canonical = True
+        tilt_offset = 0
+        volume_offset = {"x": 0, "y": 0, "z": 0}
+        x_rotation_offset = 0
+
+        if vol is not None:
+            header = get_mrc_header_local(vol)
+            x = header.cella.x / header.mx * header.nx
+            y = header.cella.y / header.my * header.ny
+            z = header.cella.z / header.mz * header.nz
+        elif vol_size is not None:
+            x, y, z = vol_size[0], vol_size[1], vol_size[2]
+        elif warp.pixel_size_a > 0 and len(warp.volume_dimensions_physical) == 3:
+            x = warp.volume_dimensions_physical[0] / warp.pixel_size_a
+            y = warp.volume_dimensions_physical[1] / warp.pixel_size_a
+            z = warp.volume_dimensions_physical[2] / warp.pixel_size_a
+        else:
+            x, y, z = 0, 0, 0
+
+        volume_dimension = {"x": x, "y": y, "z": z}
+
+        per_section_alignment_parameters = []
+        for e in warp.entries:
+            x_offset = e.tilt_axis_offset_x / warp.pixel_size_a if warp.pixel_size_a > 0 else 0.0
+            y_offset = e.tilt_axis_offset_y / warp.pixel_size_a if warp.pixel_size_a > 0 else 0.0
+            in_plane_rotation = ang2mat(WARP_TILT_AXIS_SIGN * e.tilt_axis_angle).tolist()
+
+            per_section_alignment_parameters.append(
+                PerSectionAlignmentParameters(
+                    z_index=e.z_index,
+                    tilt_angle=WARP_TILT_ANGLE_SIGN * e.tilt_angle,
+                    volume_x_rotation=0.0,
+                    in_plane_rotation=in_plane_rotation,
+                    x_offset=x_offset,
+                    y_offset=y_offset,
+                ),
+            )
+
+        return cls(
+            affine_transformation_matrix=affine_transform,
+            alignment_type=alignment_type,
+            format=format,
+            is_portal_standard=is_canonical,
+            tilt_offset=tilt_offset,
+            volume_offset=volume_offset,
+            x_rotation_offset=x_rotation_offset,
+            per_section_alignment_parameters=per_section_alignment_parameters,
+            volume_dimension=volume_dimension,
+        )
+
+    @classmethod
+    def from_warp_file(
+        cls,
+        xml_path: PATH_TYPE,
+        vol: Optional[str] = None,
+        vol_size: Tuple[float, float, float] = None,
+        pixel_size_a: Optional[float] = None,
+    ):
+        """Load a Warp XML and convert it to canonical Alignment format.
+
+        ``pixel_size_a`` (Å/px) is passed through to ``WarpAlignment.from_file``
+        and is required to recover per-tilt shift offsets in pixel units —
+        the Warp XML stores them in Å and we need to divide by the image
+        pixel size to round-trip them through AreTomo's ``tx``/``ty``.
+        """
+        warp = WarpAlignment.from_file(xml_path, pixel_size_a=pixel_size_a)
+        return cls.from_warp(warp=warp, vol=vol, vol_size=vol_size)
+
     def to_imod(
         self,
         ts_size: Tuple[int, int, int],
@@ -352,6 +458,47 @@ class Alignment(FileIOBase):
             AlphaOffset=alpha_offset,
             BetaOffset=beta_offset,
             GlobalAlignments=global_alignments,
+        )
+
+    def to_warp(
+        self,
+        pixel_size_a: float,
+        image_size_px: Tuple[int, int],
+    ) -> WarpAlignment:
+        """Convert the alignment to Warp/warpylib format.
+
+        Args:
+            pixel_size_a: Pixel size in Angstroms (Å/px). Used to convert pixel-space
+                offsets to Angstrom-space ``tilt_axis_offset_{x,y}`` and to compute
+                physical image/volume dimensions.
+            image_size_px: ``(W, H)`` of the tilt images in pixels — used for
+                ``image_dimensions_physical``.
+        """
+        entries: List[WarpAlignmentEntry] = []
+        for p in self.per_section_alignment_parameters:
+            entries.append(
+                WarpAlignmentEntry(
+                    z_index=p.z_index,
+                    tilt_angle=WARP_TILT_ANGLE_SIGN * p.tilt_angle,
+                    tilt_axis_angle=WARP_TILT_AXIS_SIGN * p.tilt_axis_rotation,
+                    tilt_axis_offset_x=p.x_offset * pixel_size_a,
+                    tilt_axis_offset_y=p.y_offset * pixel_size_a,
+                ),
+            )
+
+        image_dims = [image_size_px[0] * pixel_size_a, image_size_px[1] * pixel_size_a]
+        volume_dims = [
+            self.volume_dimension["x"] * pixel_size_a,
+            self.volume_dimension["y"] * pixel_size_a,
+            self.volume_dimension["z"] * pixel_size_a,
+        ]
+
+        return WarpAlignment(
+            n_tilts=len(entries),
+            pixel_size_a=pixel_size_a,
+            image_dimensions_physical=image_dims,
+            volume_dimensions_physical=volume_dims,
+            entries=entries,
         )
 
     def get_skipped_sections(self, ts_size: Tuple[int, int, int]):
