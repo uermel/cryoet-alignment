@@ -1,7 +1,7 @@
 import os
 from typing import Union
 
-from cryoet_alignment.io.aretomo3 import AreTomo3ALN
+from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
 
@@ -75,28 +75,44 @@ def read_cdp(cdp_path: PATH_TYPE) -> Alignment:
     return Alignment.from_cdp(cdp_path)
 
 
+def read_aretomo3_ctf(ctf_path: PATH_TYPE) -> AreTomo3CTF:
+    """Read AreTomo3 per-tilt CTF estimates from the specified _CTF.txt file.
+
+    Args:
+        ctf_path: The path to the _CTF.txt file.
+
+    Returns:
+        AreTomo3CTF: The CTF object.
+    """
+    return AreTomo3CTF.from_file(ctf_path)
+
+
 READER = {
     "imod": read_imod_basename,
     "aretomo3": read_aretomo3,
+    "aretomo3_ctf": read_aretomo3_ctf,
     "cdp": read_cdp,
 }
 
+# Note: _CTF.txt is intentionally NOT auto-inferred — ``.txt`` is too generic.
+# Pass ``reader="aretomo3_ctf"`` explicitly.
 INFER_READER = {
     ".aln": "aretomo3",
     ".json": "cdp",
 }
 
 
-def read(path: PATH_TYPE, reader: str = None) -> Union[AreTomo3ALN, Alignment, ImodAlignment]:
+def read(path: PATH_TYPE, reader: str = None) -> Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment]:
     """Read alignment files in IMOD, AreTomo3, or CryoET Data Portal format.
 
     Args:
         path: The path to the alignment file (or basename for IMOD).
-        reader: The reader to use for the alignment file (one of "imod", "aretomo3" or "cdp"). If None, the reader will
-        be inferred from the file extension.
+        reader: The reader to use for the alignment file (one of "imod", "aretomo3", "aretomo3_ctf" or "cdp"). If None,
+        the reader will be inferred from the file extension. Note: _CTF.txt is not auto-inferred — pass
+        ``reader="aretomo3_ctf"`` explicitly.
 
     Returns:
-        Union[AreTomo3ALN, Alignment, ImodAlignment]: The alignment object.
+        Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment]: The alignment object.
     """
     if reader is None:
         _, ext = os.path.splitext(path)
