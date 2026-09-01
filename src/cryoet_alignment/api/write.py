@@ -84,7 +84,7 @@ def write_aretomo3_ctf(ctf: AreTomo3CTF, ctf_path: PATH_TYPE) -> None:
 
 
 def write_warp(warp: WarpAlignment, xml_path: PATH_TYPE) -> None:
-    """Write a Warp/warpylib alignment to an XML metadata file.
+    """Write a Warp alignment to a tilt-series XML metadata file.
 
     Args:
         warp: The alignment object to write.

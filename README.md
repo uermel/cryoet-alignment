@@ -5,6 +5,7 @@ Convert between different alignment formats used in cryo-ET.
 Supported formats:
 - IMOD
 - AreTomo3
+- Warp (global tilt-series alignment)
 - cryoet-data-portal
 
 # Installation
@@ -69,6 +70,24 @@ aretomo3_ctf = read("/path/to/name_CTF.txt", reader="aretomo3_ctf")
 write(aretomo3_ctf, "/path/to/name_CTF.txt")
 ```
 
+### Warp
+Warp stores tilt-series metadata (including the global alignment: tilt angles, per-tilt tilt-axis rotation, and 2D
+shifts in Å) in an XML file per tilt series. Only the global alignment is modeled; Warp's local warp grids have no
+analog in the other formats and are ignored. Because the `.xml` extension is generic, the reader is never inferred —
+pass `reader="warp"` explicitly. The tilt-image pixel size (Å/px) is needed to convert the Å shifts to pixels; if not
+given, it is read from the XML's CTF `PixelSize` parameter.
+
+```python
+from cryoet_alignment import read
+from cryoet_alignment import write
+
+# Read a Warp tilt-series XML
+warp_alignment = read("/path/to/tilt_series.xml", reader="warp", pixel_size_a=1.7005)
+
+# Write a Warp tilt-series XML
+write(warp_alignment, "/path/to/tilt_series.xml")
+```
+
 ### cryoet-data-portal
 Alignment information from the cryoet-data-portal is stored in a JSON file with a schema described here. This file can
 be read and written as shown below.
@@ -104,6 +123,19 @@ cdp_alignment = Alignment.from_imod(imod_alignment)
 # Write AreTomo3 file
 tilt_series_dim = (4096, 4096, 41)
 write(cdp_alignment.to_aretomo(ts_size=tilt_series_dim), "/path/to/alignment_file.aln")
+```
+
+### AreTomo3 to Warp
+```python
+from cryoet_alignment import read, write
+from cryoet_alignment.io.cryoet_data_portal import Alignment
+
+# Read the AreTomo3 alignment and convert to the canonical format
+cdp_alignment = Alignment.from_aretomo3(read("/path/to/alignment_file.aln"), vol_size=(4096, 4096, 2000))
+
+# Convert to Warp and write the tilt-series XML
+warp_alignment = cdp_alignment.to_warp(pixel_size_a=1.54, image_size_px=(4096, 4096))
+write(warp_alignment, "/path/to/tilt_series.xml")
 ```
 
 ### cryoet-data-portal to IMOD

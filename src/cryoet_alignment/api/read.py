@@ -88,16 +88,18 @@ def read_aretomo3_ctf(ctf_path: PATH_TYPE) -> AreTomo3CTF:
     return AreTomo3CTF.from_file(ctf_path)
 
 
-def read_warp(xml_path: PATH_TYPE) -> WarpAlignment:
-    """Read a Warp/warpylib alignment from the specified XML file.
+def read_warp(xml_path: PATH_TYPE, pixel_size_a: float = None) -> WarpAlignment:
+    """Read a Warp alignment from the specified tilt-series XML file.
 
     Args:
-        xml_path: The path to the warpylib XML metadata file.
+        xml_path: The path to the Warp tilt-series XML metadata file.
+        pixel_size_a: Tilt-image pixel size in Å/px. If None, it is read from
+            the XML's CTF PixelSize parameter; an explicit value always wins.
 
     Returns:
         WarpAlignment: The alignment object.
     """
-    return WarpAlignment.from_file(xml_path)
+    return WarpAlignment.from_file(xml_path, pixel_size_a=pixel_size_a)
 
 
 READER = {
@@ -119,7 +121,9 @@ INFER_READER = {
 
 
 def read(
-    path: PATH_TYPE, reader: str = None,
+    path: PATH_TYPE,
+    reader: str = None,
+    **kwargs,
 ) -> Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, WarpAlignment]:
     """Read alignment files in IMOD, AreTomo3, CryoET Data Portal, or Warp format.
 
@@ -128,6 +132,8 @@ def read(
         reader: The reader to use for the alignment file (one of "imod", "aretomo3",
         "aretomo3_ctf", "cdp", or "warp"). If None, the reader will be inferred from the file extension.
         Note: ``.xml`` and _CTF.txt are not auto-inferred — pass the reader explicitly.
+        **kwargs: Passed through to the selected reader (e.g. ``pixel_size_a``
+        for ``reader="warp"``).
 
     Returns:
         Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, WarpAlignment]: The alignment object.
@@ -136,4 +142,4 @@ def read(
         _, ext = os.path.splitext(path)
         reader = INFER_READER.get(ext, "imod")
 
-    return READER[reader](path)
+    return READER[reader](path, **kwargs)

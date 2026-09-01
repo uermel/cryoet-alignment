@@ -1,25 +1,32 @@
-"""Warp/warpylib XML tilt-series alignment format.
+"""Warp XML tilt-series alignment format (native parser/writer, no dependencies).
 
 Represents only the GLOBAL per-tilt alignment fields (angles, tilt-axis rotation,
-2D shifts). Warp's local fields (per-image 2D warp grids of shape (3,3) and 3D
-volume warp grids of shape (3,3,2,10)) are intentionally NOT modeled — they have
-no analog in the canonical ``Alignment`` model and would be dropped on conversion.
+2D shifts). Warp's local fields (per-image 2D warp grids and 4D volume warp
+grids) are intentionally NOT modeled — they have no analog in the canonical
+``Alignment`` model and would be dropped on conversion.
 
-XML I/O is delegated to ``warpylib.TiltSeries`` (optional dependency: install with
-``pip install cryoet-alignment[warp]``) so this module stays a thin schema wrapper
-rather than reimplementing Warp's parser.
+The XML subset handled here mirrors Warp's ``<TiltSeries>`` metadata file:
+
+* root attributes ``ImageDimensionsAngstrom`` / ``VolumeDimensionsAngstrom``
+  (comma-separated Å; absent in older Warp exports, in which case they read
+  as zeros),
+* newline-separated per-tilt text elements ``Angles`` (defines the tilt
+  count), ``AxisAngle``, ``AxisOffsetX``, ``AxisOffsetY`` (offsets in Å),
+* ``<CTF><Param Name="PixelSize" Value="…"/></CTF>`` as a pixel-size source.
+
+Everything else in a real Warp export (doses, CTF fits, warp grids) is ignored
+on read and omitted on write; Warp/warpylib readers default all omitted
+elements. Note for downstream tools: Warp conventionally expects the tilt
+stack at ``{xml_dir}/tiltstack/{stem}/{stem}.st`` — this module only handles
+the XML.
 """
 
-from pathlib import Path
 from typing import List, Optional
+from xml.etree import ElementTree
 
 from pydantic import BaseModel
 
 from cryoet_alignment.io.base import PATH_TYPE, FileIOBase
-
-_WARPYLIB_INSTALL_HINT = (
-    "Warp format support requires warpylib. Install with: pip install cryoet-alignment[warp]"
-)
 
 
 class WarpAlignmentEntry(BaseModel):
@@ -40,8 +47,37 @@ class WarpAlignmentEntry(BaseModel):
     tilt_axis_offset_y: float
 
 
+def _attr_floats(root: ElementTree.Element, name: str, count: int) -> List[float]:
+    """Comma-separated float root attribute; zeros when absent (older exports)."""
+    raw = root.get(name)
+    if raw is None or not raw.strip():
+        return [0.0] * count
+    values = [float(v) for v in raw.split(",")]
+    if len(values) != count:
+        raise ValueError(f"attribute {name} has {len(values)} values, expected {count}")
+    return values
+
+
+def _per_tilt_floats(root: ElementTree.Element, name: str, n_tilts: int) -> List[float]:
+    """Newline-separated per-tilt float element; zeros when absent."""
+    elem = root.find(name)
+    if elem is None or not (elem.text or "").strip():
+        return [0.0] * n_tilts
+    values = [float(v) for v in elem.text.split() if v.strip()]
+    if len(values) != n_tilts:
+        raise ValueError(f"element {name} has {len(values)} values, expected {n_tilts} (from Angles)")
+    return values
+
+
+def _ctf_pixel_size(root: ElementTree.Element) -> Optional[float]:
+    for param in root.findall("./CTF/Param"):
+        if param.get("Name") == "PixelSize" and param.get("Value"):
+            return float(param.get("Value"))
+    return None
+
+
 class WarpAlignment(FileIOBase):
-    """Warp/warpylib tilt-series alignment metadata.
+    """Warp tilt-series alignment metadata.
 
     Attributes:
         n_tilts: Number of tilt images.
@@ -58,144 +94,96 @@ class WarpAlignment(FileIOBase):
     entries: List[WarpAlignmentEntry]
 
     @classmethod
-    def from_file(
-        cls,
-        file_path: PATH_TYPE,
-        pixel_size_a: Optional[float] = None,
-    ) -> "WarpAlignment":
-        """Load a WarpAlignment from a warpylib XML file.
+    def from_string(cls, text: str, pixel_size_a: Optional[float] = None) -> "WarpAlignment":
+        """Parse a Warp tilt-series XML.
 
         Args:
-            file_path: Path to the warpylib TiltSeries XML.
+            text: XML content (a leading UTF-8 BOM, as written by Warp, is tolerated).
             pixel_size_a: Tilt-image pixel size in Å/px. The Warp XML stores
                 per-tilt shift offsets in Å; ``Alignment.from_warp`` needs to
                 divide those by the per-image pixel size to recover pixel
-                shifts for ``.aln`` round-trips. The XML alone doesn't carry
-                this number — warpylib derives it from the source stack at
-                runtime — so callers that need a faithful round-trip must
-                pass it explicitly. If not provided, we attempt to read it
-                from the warpylib API and raise with an actionable message
-                if that fails (rather than silently returning a 0 that
-                zeroes all per-tilt shifts downstream).
+                shifts for ``.aln`` round-trips. When not given, the value is
+                read from the XML's ``<CTF><Param Name="PixelSize"/>`` entry —
+                correct for real Warp exports, but note that XMLs written by
+                third-party tools may carry a placeholder there, so an
+                explicit value always wins. If neither is available we refuse
+                to guess: a silent 0 propagates into ``Alignment.from_warp``
+                as a ``/0 → 0.0`` shift, which silently destroys the alignment.
         """
-        try:
-            import torch  # noqa: F401
-            from warpylib import TiltSeries
-        except ImportError as e:
-            raise ImportError(_WARPYLIB_INSTALL_HINT) from e
+        root = ElementTree.fromstring(text.lstrip("\ufeff"))
 
-        ts = TiltSeries(path=str(file_path))
+        angles_elem = root.find("Angles")
+        if angles_elem is None or not (angles_elem.text or "").strip():
+            raise ValueError("no <Angles> element — not a Warp tilt-series XML")
+        angles = [float(v) for v in angles_elem.text.split() if v.strip()]
+        n_tilts = len(angles)
 
-        image_dims = [float(v) for v in ts.image_dimensions_physical]
-        volume_dims = [float(v) for v in ts.volume_dimensions_physical]
+        image_dims = _attr_floats(root, "ImageDimensionsAngstrom", 2)
+        volume_dims = _attr_floats(root, "VolumeDimensionsAngstrom", 3)
+        axis_angles = _per_tilt_floats(root, "AxisAngle", n_tilts)
+        offsets_x = _per_tilt_floats(root, "AxisOffsetX", n_tilts)
+        offsets_y = _per_tilt_floats(root, "AxisOffsetY", n_tilts)
 
         if pixel_size_a is None:
-            # warpylib's `load_image_dimensions(original_pixel_size)` (a) requires
-            # an argument we don't have here, and (b) returns None even when
-            # called correctly — it just side-effects attributes on the
-            # TiltSeries. So we can't derive pixel size from the XML alone.
-            # Refuse to guess: a silent 0 propagates into Alignment.from_warp
-            # as a `/0 → 0.0` shift, which silently destroys the alignment.
+            pixel_size_a = _ctf_pixel_size(root)
+        if pixel_size_a is None:
             raise ValueError(
-                f"Cannot derive pixel_size_a from {file_path} — the Warp XML "
-                "doesn't store it directly and warpylib's load_image_dimensions "
-                "API requires an explicit `original_pixel_size`. Pass "
-                "`pixel_size_a=<source_stack_Å/px>` to WarpAlignment.from_file "
-                "(or use Alignment.from_warp_file with the same parameter).",
+                "Cannot derive pixel_size_a — the Warp XML carries no "
+                "<CTF><Param Name='PixelSize'/> entry. Pass "
+                "`pixel_size_a=<source_stack_Å/px>` to WarpAlignment.from_file/"
+                "from_string (or use Alignment.from_warp_file with the same parameter).",
             )
-        pixel_size_a = float(pixel_size_a)
 
-        n_tilts = int(ts.n_tilts)
-        entries = []
-        for i in range(n_tilts):
-            entries.append(
-                WarpAlignmentEntry(
-                    z_index=i,
-                    tilt_angle=float(ts.angles[i]),
-                    tilt_axis_angle=float(ts.tilt_axis_angles[i]),
-                    tilt_axis_offset_x=float(ts.tilt_axis_offset_x[i]),
-                    tilt_axis_offset_y=float(ts.tilt_axis_offset_y[i]),
-                ),
+        entries = [
+            WarpAlignmentEntry(
+                z_index=i,
+                tilt_angle=angles[i],
+                tilt_axis_angle=axis_angles[i],
+                tilt_axis_offset_x=offsets_x[i],
+                tilt_axis_offset_y=offsets_y[i],
             )
+            for i in range(n_tilts)
+        ]
 
         return cls(
             n_tilts=n_tilts,
-            pixel_size_a=pixel_size_a,
+            pixel_size_a=float(pixel_size_a),
             image_dimensions_physical=image_dims,
             volume_dimensions_physical=volume_dims,
             entries=entries,
         )
 
-    def to_file(self, file_path: PATH_TYPE) -> None:
-        """Write a WarpAlignment to a warpylib XML file.
-
-        Note: this also requires the corresponding tilt stack to live at the
-        warpylib-conventional location ``{file_path.parent}/tiltstack/{stem}/{stem}.st``
-        for downstream tools that load the stack. This method only writes the XML;
-        the caller is responsible for the stack file/symlink.
-        """
-        try:
-            import torch
-            from warpylib import TiltSeries
-        except ImportError as e:
-            raise ImportError(_WARPYLIB_INSTALL_HINT) from e
-
-        xml_path = Path(file_path)
-        ts = TiltSeries(path=str(xml_path), n_tilts=self.n_tilts)
-
-        ts.angles = torch.tensor([e.tilt_angle for e in self.entries], dtype=torch.float32)
-        ts.tilt_axis_angles = torch.tensor(
-            [e.tilt_axis_angle for e in self.entries], dtype=torch.float32,
-        )
-        ts.tilt_axis_offset_x = torch.tensor(
-            [e.tilt_axis_offset_x for e in self.entries], dtype=torch.float32,
-        )
-        ts.tilt_axis_offset_y = torch.tensor(
-            [e.tilt_axis_offset_y for e in self.entries], dtype=torch.float32,
-        )
-
-        ts.image_dimensions_physical = torch.tensor(
-            self.image_dimensions_physical, dtype=torch.float32,
-        )
-        ts.volume_dimensions_physical = torch.tensor(
-            self.volume_dimensions_physical, dtype=torch.float32,
-        )
-
-        ts.save_meta(str(xml_path))
-
     @classmethod
-    def from_string(cls, text: str) -> "WarpAlignment":
-        """Parse from a string of XML content. Less common than ``from_file``;
-        warpylib's TiltSeries is path-based, so this writes to a temp file."""
-        try:
-            from warpylib import TiltSeries  # noqa: F401
-        except ImportError as e:
-            raise ImportError(_WARPYLIB_INSTALL_HINT) from e
-
-        import tempfile
-
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False) as f:
-            f.write(text)
-            tmp_path = f.name
-        try:
-            return cls.from_file(tmp_path)
-        finally:
-            Path(tmp_path).unlink(missing_ok=True)
+    def from_file(cls, file_path: PATH_TYPE, pixel_size_a: Optional[float] = None) -> "WarpAlignment":
+        """Load from a Warp tilt-series XML file (see ``from_string``)."""
+        with open(file_path, "r") as file:
+            return cls.from_string(file.read(), pixel_size_a=pixel_size_a)
 
     def __str__(self) -> str:
-        """Serialize to an XML string by writing through a temp file."""
-        try:
-            from warpylib import TiltSeries  # noqa: F401
-        except ImportError as e:
-            raise ImportError(_WARPYLIB_INSTALL_HINT) from e
+        """Serialize to a Warp tilt-series XML string.
 
-        import tempfile
+        Only the modeled subset is written (dimension attributes, the four
+        per-tilt elements, and the CTF PixelSize parameter); Warp/warpylib
+        readers default everything omitted.
+        """
+        root = ElementTree.Element("TiltSeries")
+        img = self.image_dimensions_physical
+        vol = self.volume_dimensions_physical
+        root.set("ImageDimensionsAngstrom", f"{img[0]:.9g}, {img[1]:.9g}")
+        root.set("VolumeDimensionsAngstrom", f"{vol[0]:.9g}, {vol[1]:.9g}, {vol[2]:.9g}")
 
-        with tempfile.NamedTemporaryFile(mode="r", suffix=".xml", delete=False) as f:
-            tmp_path = f.name
-        try:
-            self.to_file(tmp_path)
-            with open(tmp_path) as f:
-                return f.read()
-        finally:
-            Path(tmp_path).unlink(missing_ok=True)
+        per_tilt = {
+            "Angles": [e.tilt_angle for e in self.entries],
+            "AxisAngle": [e.tilt_axis_angle for e in self.entries],
+            "AxisOffsetX": [e.tilt_axis_offset_x for e in self.entries],
+            "AxisOffsetY": [e.tilt_axis_offset_y for e in self.entries],
+        }
+        for name, values in per_tilt.items():
+            elem = ElementTree.SubElement(root, name)
+            elem.text = "\n".join(f"{v:.9g}" for v in values)
+
+        ctf = ElementTree.SubElement(root, "CTF")
+        ElementTree.SubElement(ctf, "Param", Name="PixelSize", Value=f"{self.pixel_size_a:.9g}")
+
+        ElementTree.indent(root, space="  ")
+        return '<?xml version="1.0" encoding="utf-8"?>\n' + ElementTree.tostring(root, encoding="unicode") + "\n"
