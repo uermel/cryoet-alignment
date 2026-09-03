@@ -71,6 +71,21 @@ aretomo3_ctf = read("/path/to/name_CTF.txt", reader="aretomo3_ctf")
 write(aretomo3_ctf, "/path/to/name_CTF.txt")
 ```
 
+AreTomo3's per-tilt angle file (`<name>_TLT.txt`: tilt angle, 1-based acquisition index and per-image dose, one row per
+raw tilt including dark frames; AreTomo3 reads it in preference to `<name>.rawtlt`) is supported the same way. One- and
+two-column files are accepted; pass `reader="aretomo3_tlt"` explicitly.
+
+```python
+from cryoet_alignment import read, write
+
+# Read AreTomo3 tilt file
+aretomo3_tlt = read("/path/to/name_TLT.txt", reader="aretomo3_tlt")
+aretomo3_tlt.tilts, aretomo3_tlt.acq_indices, aretomo3_tlt.doses
+
+# Write AreTomo3 tilt file
+write(aretomo3_tlt, "/path/to/name_TLT.txt")
+```
+
 ### Warp
 Warp stores tilt-series metadata (including the global alignment: tilt angles, per-tilt tilt-axis rotation, and 2D
 shifts in Å) in an XML file per tilt series. Only the global alignment is modeled; Warp's local warp grids have no
@@ -87,6 +102,22 @@ warp_alignment = read("/path/to/tilt_series.xml", reader="warp", pixel_size_a=1.
 
 # Write a Warp tilt-series XML
 write(warp_alignment, "/path/to/tilt_series.xml")
+```
+
+Two ancillary Warp project files are supported as well: the `.tomostar` tilt-series descriptor (`_wrpMovieName`,
+`_wrpAngleTilt`, `_wrpAxisAngle`, `_wrpDose`, extra columns preserved) and the `.settings` project file
+(`WarpTools create_settings`; `WarpSettings.create(...)` fills the vendored default document exactly like
+`create_settings` does). Both are inferred from their extensions.
+
+```python
+from cryoet_alignment import read, write
+from cryoet_alignment.io.warp import WarpSettings, WarpTomostar
+
+tomostar = read("/path/to/tomostar/TS_01.tomostar")
+tomostar.movie_names, [r.angle_tilt for r in tomostar.rows]
+
+settings = WarpSettings.create(pixel_size_a=1.54, exposure_per_tilt=3.87, tomo_dims_px=(4096, 4096, 2000))
+write(settings, "/path/to/warp_tiltseries.settings")
 ```
 
 ### RELION 5

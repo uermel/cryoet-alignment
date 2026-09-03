@@ -1,11 +1,11 @@
 import os
 from typing import Union
 
-from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF
+from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF, AreTomo3TLT
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
 from cryoet_alignment.io.relion import RelionAlignment
-from cryoet_alignment.io.warp import WarpAlignment
+from cryoet_alignment.io.warp import WarpAlignment, WarpSettings, WarpTomostar
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
 
@@ -89,6 +89,18 @@ def read_aretomo3_ctf(ctf_path: PATH_TYPE) -> AreTomo3CTF:
     return AreTomo3CTF.from_file(ctf_path)
 
 
+def read_aretomo3_tlt(tlt_path: PATH_TYPE) -> AreTomo3TLT:
+    """Read AreTomo3 per-tilt angles / acquisition order / dose from a _TLT.txt file.
+
+    Args:
+        tlt_path: The path to the _TLT.txt file.
+
+    Returns:
+        AreTomo3TLT: The tilt-file object.
+    """
+    return AreTomo3TLT.from_file(tlt_path)
+
+
 def read_warp(xml_path: PATH_TYPE, pixel_size_a: float = None) -> WarpAlignment:
     """Read a Warp alignment from the specified tilt-series XML file.
 
@@ -101,6 +113,30 @@ def read_warp(xml_path: PATH_TYPE, pixel_size_a: float = None) -> WarpAlignment:
         WarpAlignment: The alignment object.
     """
     return WarpAlignment.from_file(xml_path, pixel_size_a=pixel_size_a)
+
+
+def read_warp_tomostar(tomostar_path: PATH_TYPE) -> WarpTomostar:
+    """Read a Warp .tomostar tilt-series descriptor.
+
+    Args:
+        tomostar_path: The path to the .tomostar file.
+
+    Returns:
+        WarpTomostar: The tomostar object.
+    """
+    return WarpTomostar.from_file(tomostar_path)
+
+
+def read_warp_settings(settings_path: PATH_TYPE) -> WarpSettings:
+    """Read a Warp .settings project file.
+
+    Args:
+        settings_path: The path to the .settings file.
+
+    Returns:
+        WarpSettings: The settings object.
+    """
+    return WarpSettings.from_file(settings_path)
 
 
 def read_relion(
@@ -128,13 +164,16 @@ READER = {
     "imod": read_imod_basename,
     "aretomo3": read_aretomo3,
     "aretomo3_ctf": read_aretomo3_ctf,
+    "aretomo3_tlt": read_aretomo3_tlt,
     "cdp": read_cdp,
     "warp": read_warp,
+    "warp_tomostar": read_warp_tomostar,
+    "warp_settings": read_warp_settings,
     "relion": read_relion,
 }
 
-# Note: _CTF.txt is intentionally NOT auto-inferred — ``.txt`` is too generic.
-# Pass ``reader="aretomo3_ctf"`` explicitly.
+# Note: _CTF.txt and _TLT.txt are intentionally NOT auto-inferred — ``.txt`` is too
+# generic. Pass ``reader="aretomo3_ctf"`` / ``reader="aretomo3_tlt"`` explicitly.
 # Note: ``.xml`` is intentionally NOT auto-inferred — it is too generic and could
 # collide with non-Warp XML formats. Pass ``reader="warp"`` explicitly.
 # ``.star`` IS inferred: within this package's scope a .star file is a RELION
@@ -143,6 +182,8 @@ INFER_READER = {
     ".aln": "aretomo3",
     ".json": "cdp",
     ".star": "relion",
+    ".tomostar": "warp_tomostar",
+    ".settings": "warp_settings",
 }
 
 
@@ -150,20 +191,31 @@ def read(
     path: PATH_TYPE,
     reader: str = None,
     **kwargs,
-) -> Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, RelionAlignment, WarpAlignment]:
+) -> Union[
+    AreTomo3ALN,
+    AreTomo3CTF,
+    AreTomo3TLT,
+    Alignment,
+    ImodAlignment,
+    RelionAlignment,
+    WarpAlignment,
+    WarpTomostar,
+    WarpSettings,
+]:
     """Read alignment files in IMOD, AreTomo3, CryoET Data Portal, RELION, or Warp format.
 
     Args:
         path: The path to the alignment file (or basename for IMOD).
         reader: The reader to use for the alignment file (one of "imod", "aretomo3",
-        "aretomo3_ctf", "cdp", "relion", or "warp"). If None, the reader will be inferred
-        from the file extension (".aln", ".json", ".star").
-        Note: ``.xml`` and _CTF.txt are not auto-inferred — pass the reader explicitly.
+        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", "warp", "warp_tomostar" or
+        "warp_settings"). If None, the reader will be inferred from the file extension
+        (".aln", ".json", ".star", ".tomostar", ".settings").
+        Note: ``.xml``, _CTF.txt and _TLT.txt are not auto-inferred — pass the reader explicitly.
         **kwargs: Passed through to the selected reader (e.g. ``pixel_size_a``
         for ``reader="warp"``; ``tomo_name``/``image_size_px`` for ``reader="relion"``).
 
     Returns:
-        Union[AreTomo3ALN, AreTomo3CTF, Alignment, ImodAlignment, RelionAlignment, WarpAlignment]:
+        Union[AreTomo3ALN, AreTomo3CTF, AreTomo3TLT, Alignment, ImodAlignment, RelionAlignment, WarpAlignment]:
         The alignment object.
     """
     if reader is None:
