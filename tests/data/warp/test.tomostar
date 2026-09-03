@@ -1,0 +1,41 @@
+
+data_
+
+loop_
+_wrpMovieName #1
+_wrpAngleTilt #2
+_wrpAxisAngle #3
+_wrpDose #4
+_wrpAverageIntensity #5
+_wrpMaskedFraction #6
+  ../warp_frameseries/24jul16a_Position_16_3_031_-45.00_20240716_210415_EER.eer   45.01  83.940       116.1  14.586  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_028_-42.00_20240716_210203_EER.eer   42.01  83.940      104.49  15.289  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_027_-39.00_20240716_210124_EER.eer   39.01  83.940  100.619995  15.914  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_024_-36.00_20240716_205905_EER.eer   36.01  83.940   89.009995  16.484  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_023_-33.00_20240716_205826_EER.eer   33.00  83.940       85.14  16.953  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_020_-30.00_20240716_205611_EER.eer   30.01  83.940       73.53  17.375  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_019_-27.00_20240716_205531_EER.eer   27.01  83.940   69.659996  17.750  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_016_-24.00_20240716_205315_EER.eer   24.01  83.940       58.05  18.047  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_015_-21.00_20240716_205236_EER.eer   21.01  83.940       54.18  18.469  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_012_-18.00_20240716_205022_EER.eer   18.01  83.940       42.57  18.625  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_011_-15.00_20240716_204941_EER.eer   15.01  83.940   38.699997  18.906  0.000
+  ../warp_frameseries/24jul16a_Position_16_3_008_-12.00_20240716_204728_EER.eer   12.01  83.940       27.09  19.047  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_007_-9.00_20240716_204648_EER.eer    9.01  83.940       23.22  19.172  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_004_-6.00_20240716_204433_EER.eer    6.01  83.940       11.61  19.172  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_003_-3.00_20240716_204354_EER.eer    3.01  83.940        7.74  19.156  0.000
+    ../warp_frameseries/24jul16a_Position_16_3_001_0.00_20240716_204232_EER.eer    0.01  83.940           0  19.031  0.000
+    ../warp_frameseries/24jul16a_Position_16_3_002_3.00_20240716_204306_EER.eer   -2.99  83.940        3.87  19.125  0.000
+    ../warp_frameseries/24jul16a_Position_16_3_005_6.00_20240716_204522_EER.eer   -5.99  83.940       15.48  19.266  0.000
+    ../warp_frameseries/24jul16a_Position_16_3_006_9.00_20240716_204600_EER.eer   -8.99  83.940   19.349998  19.297  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_009_12.00_20240716_204814_EER.eer  -11.99  83.940       30.96  19.203  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_010_15.00_20240716_204852_EER.eer  -14.99  83.940   34.829998  19.078  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_013_18.00_20240716_205109_EER.eer  -17.99  83.940       46.44  18.984  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_014_21.00_20240716_205147_EER.eer  -20.99  83.940   50.309998  18.828  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_017_24.00_20240716_205402_EER.eer  -23.99  83.940       61.92  18.688  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_018_27.00_20240716_205440_EER.eer  -26.99  83.940       65.79  18.391  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_021_30.00_20240716_205658_EER.eer  -29.99  83.940   77.399994  18.156  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_022_33.00_20240716_205736_EER.eer  -32.99  83.940       81.27  17.719  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_025_36.00_20240716_205953_EER.eer  -35.99  83.940       92.88  17.406  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_026_39.00_20240716_210034_EER.eer  -38.99  83.940       96.75  16.922  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_029_42.00_20240716_210255_EER.eer  -41.99  83.940      108.36  16.422  0.000
+   ../warp_frameseries/24jul16a_Position_16_3_030_45.00_20240716_210330_EER.eer  -44.99  83.940  112.229996  15.883  0.000
