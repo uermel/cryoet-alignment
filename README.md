@@ -71,6 +71,21 @@ aretomo3_ctf = read("/path/to/name_CTF.txt", reader="aretomo3_ctf")
 write(aretomo3_ctf, "/path/to/name_CTF.txt")
 ```
 
+AreTomo3's per-tilt angle file (`<name>_TLT.txt`: tilt angle, 1-based acquisition index and per-image dose, one row per
+raw tilt including dark frames; AreTomo3 reads it in preference to `<name>.rawtlt`) is supported the same way. One- and
+two-column files are accepted; pass `reader="aretomo3_tlt"` explicitly.
+
+```python
+from cryoet_alignment import read, write
+
+# Read AreTomo3 tilt file
+aretomo3_tlt = read("/path/to/name_TLT.txt", reader="aretomo3_tlt")
+aretomo3_tlt.tilts, aretomo3_tlt.acq_indices, aretomo3_tlt.doses
+
+# Write AreTomo3 tilt file
+write(aretomo3_tlt, "/path/to/name_TLT.txt")
+```
+
 ### Warp
 Warp stores tilt-series metadata (including the global alignment: tilt angles, per-tilt tilt-axis rotation, and 2D
 shifts in Å) in an XML file per tilt series. Only the global alignment is modeled; Warp's local warp grids have no
