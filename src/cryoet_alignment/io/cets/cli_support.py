@@ -135,8 +135,13 @@ def expand_sources(tokens: Sequence[str], patterns: Sequence[str]) -> List[Path]
 
 def common_options(func):
     """``--config``, ``--overwrite``, ``--fail-fast`` on every command."""
-    func = click.option("--config", "config_path", type=click.Path(exists=True, dir_okay=False), default=None,
-                        help="YAML config with overrides (global 'cets', per-command and 'series' sections).")(func)
+    func = click.option(
+        "--config",
+        "config_path",
+        type=click.Path(exists=True, dir_okay=False),
+        default=None,
+        help="YAML config with overrides (global 'cets', per-command and 'series' sections).",
+    )(func)
     func = click.option("--overwrite", is_flag=True, help="Replace existing outputs.")(func)
     func = click.option("--fail-fast", is_flag=True, help="Stop at the first failing series.")(func)
     return func
@@ -144,9 +149,18 @@ def common_options(func):
 
 def selection_options(func):
     func = click.option("--region", "regions", multiple=True, help="Region id(s) to convert (default: all).")(func)
-    func = click.option("--alignment", "alignment", default=None,
-                        help="Alignment to export when a region has several: instance name or 0-based index.")(func)
-    func = click.option("--tomogram", "tomogram", default=None, help="Reference tomogram id when a region has several.")(func)
+    func = click.option(
+        "--alignment",
+        "alignment",
+        default=None,
+        help="Alignment to export when a region has several: instance name or 0-based index.",
+    )(func)
+    func = click.option(
+        "--tomogram",
+        "tomogram",
+        default=None,
+        help="Reference tomogram id when a region has several.",
+    )(func)
     return func
 
 
@@ -159,7 +173,14 @@ def load_config(config_path: Optional[str], known_options: Iterable[str]) -> Opt
         raise click.ClickException(str(e)) from e
 
 
-def make_resolver(package: str, command: str, cli: Dict[str, Any], config: Optional[ConfigFile], series: Optional[str], sr: SeriesReport) -> Resolver:
+def make_resolver(
+    package: str,
+    command: str,
+    cli: Dict[str, Any],
+    config: Optional[ConfigFile],
+    series: Optional[str],
+    sr: SeriesReport,
+) -> Resolver:
     return Resolver(package, command, cli=cli, config=config, series=series, warn=sr.warnings.append)
 
 

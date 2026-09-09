@@ -330,10 +330,11 @@ class WarpAlignment(FileIOBase):
         n_tilts = len(angles)
 
         image_dims = image_dims_a if image_dims_a is not None else _attr_floats(root, "ImageDimensionsAngstrom", 2)
-        volume_dims = (
-            volume_dims_a if volume_dims_a is not None else _attr_floats(root, "VolumeDimensionsAngstrom", 3)
-        )
-        for label, dims, n in (("ImageDimensionsAngstrom", image_dims, 2), ("VolumeDimensionsAngstrom", volume_dims, 3)):
+        volume_dims = volume_dims_a if volume_dims_a is not None else _attr_floats(root, "VolumeDimensionsAngstrom", 3)
+        for label, dims, n in (
+            ("ImageDimensionsAngstrom", image_dims, 2),
+            ("VolumeDimensionsAngstrom", volume_dims, 3),
+        ):
             if strict_dims and (dims is None or any(float(v) <= 0 for v in dims)):
                 raise ValueError(
                     f"{label} is missing or zero in this XML (Warp re-saves them that way); pass "
@@ -440,7 +441,14 @@ class WarpAlignment(FileIOBase):
             ElementTree.SubElement(g, "Node", X="0", Y="0", Z="0", W="0", Value=f"{values[0]:.9g}")
             return
         g = ElementTree.SubElement(
-            parent, name, Width="1", Height="1", Depth=str(len(values)), MarginX="0", MarginY="0", MarginZ="0",
+            parent,
+            name,
+            Width="1",
+            Height="1",
+            Depth=str(len(values)),
+            MarginX="0",
+            MarginY="0",
+            MarginZ="0",
         )
         for z, v in enumerate(values):
             ElementTree.SubElement(g, "Node", X="0", Y="0", Z=str(z), Value=f"{v:.9g}")

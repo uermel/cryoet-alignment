@@ -43,13 +43,19 @@ def alignment_from_cets_imod(
     params = []
     for pa in cets_alignment.projection_alignments or []:
         if pa.input != CETS_IMOD_INPUT or pa.output != CETS_IMOD_OUTPUT:
-            raise ValueError(f"projection alignment {pa.id!r}: not a cets-imod alignment ({pa.input!r} -> {pa.output!r})")
+            raise ValueError(
+                f"projection alignment {pa.id!r}: not a cets-imod alignment ({pa.input!r} -> {pa.output!r})",
+            )
         steps = list(pa.sequence or [])
         if len(steps) != 2 or _ttype(steps[0]) != "translation" or _ttype(steps[1]) != "affine":
-            raise ValueError(f"projection alignment {pa.id!r}: cets-imod expects [Translation, Affine], got {[_ttype(s) for s in steps]}")
+            raise ValueError(
+                f"projection alignment {pa.id!r}: cets-imod expects [Translation, Affine], got {[_ttype(s) for s in steps]}",
+            )
         im = images.get(pa.tilt_image_id)
         if im is None or im.section is None or im.nominal_tilt_angle is None:
-            raise ValueError(f"projection alignment {pa.id!r}: tilt image {pa.tilt_image_id!r} missing section/nominal_tilt_angle")
+            raise ValueError(
+                f"projection alignment {pa.id!r}: tilt image {pa.tilt_image_id!r} missing section/nominal_tilt_angle",
+            )
         width, height = im.width, im.height
         if width is None or height is None or width % 2 or height % 2:
             raise ValueError(

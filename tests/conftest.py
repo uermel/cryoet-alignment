@@ -36,13 +36,28 @@ def aln_file() -> Tuple[Path, AreTomo3ALN]:
         BetaOffset=0.00,
         GlobalAlignments=[
             GlobalAlignmentInfo(
-                sec=sec, rot=-12.6611, gmag=1.0, tx=tx, ty=ty, smean=1.0, sfit=1.0, scale=1.0, base=0.0, tilt=tilt,
+                sec=sec,
+                rot=-12.6611,
+                gmag=1.0,
+                tx=tx,
+                ty=ty,
+                smean=1.0,
+                sfit=1.0,
+                scale=1.0,
+                base=0.0,
+                tilt=tilt,
             )
             for sec, tx, ty, tilt in globals_
         ],
         LocalAlignments=[
             LocalAlignmentInfo(
-                sec_idx=s, patch_idx=p, center_x=cx + s, center_y=cy, shift_x=sx, shift_y=sy, is_reliable=1.0,
+                sec_idx=s,
+                patch_idx=p,
+                center_x=cx + s,
+                center_y=cy,
+                shift_x=sx,
+                shift_y=sy,
+                is_reliable=1.0,
             )
             for s in range(6)
             for p, (cx, cy, sx, sy) in enumerate(vals)

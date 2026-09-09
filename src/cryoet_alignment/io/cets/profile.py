@@ -10,8 +10,7 @@ COMPANION_VERSION = "cets-rigid-companion/0.1"
 #: Pinned cets-data-models commit (PR #34 head; contains main, sequence cardinality 3).
 CETS_DATA_MODEL_COMMIT = "b415e952d309ac1ec0dee01a3a5db639cb08bba5"
 CETS_INSTALL_HINT = (
-    "pip install 'cets_data_model @ git+https://github.com/TomoBabel/cets-data-models.git@"
-    f"{CETS_DATA_MODEL_COMMIT}'"
+    f"pip install 'cets_data_model @ git+https://github.com/TomoBabel/cets-data-models.git@{CETS_DATA_MODEL_COMMIT}'"
 )
 
 # Coordinate system names (PR #34 CoordinateSpaceName)
@@ -60,4 +59,4 @@ def section_from_tilt_image_id(tilt_image_id_: str, tilt_series_id: str) -> int:
     prefix = f"{tilt_series_id}_"
     if not tilt_image_id_.startswith(prefix):
         raise ValueError(f"tilt image id {tilt_image_id_!r} does not belong to tilt series {tilt_series_id!r}")
-    return int(tilt_image_id_[len(prefix):])
+    return int(tilt_image_id_[len(prefix) :])

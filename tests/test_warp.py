@@ -326,7 +326,10 @@ def test_dims_absent_refused_unless_overridden():
     with pytest.raises(ValueError, match="ImageDimensionsAngstrom"):
         WarpAlignment.from_string(xml, pixel_size_a=2.0)
     warp_ok = WarpAlignment.from_string(
-        xml, pixel_size_a=2.0, image_dims_a=[1024.0, 1024.0], volume_dims_a=[1024.0, 1024.0, 800.0],
+        xml,
+        pixel_size_a=2.0,
+        image_dims_a=[1024.0, 1024.0],
+        volume_dims_a=[1024.0, 1024.0, 800.0],
     )
     assert warp_ok.volume_dimensions_physical == [1024.0, 1024.0, 800.0]
     warp = WarpAlignment.from_string(xml, pixel_size_a=2.0, strict_dims=False)
