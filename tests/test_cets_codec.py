@@ -482,7 +482,10 @@ def test_config_validation_is_scoped_to_the_running_command(tmp_path):
     assert conf.lookup("coords_angpix", "cets-warpm", "to-cets") == 3.0
     with pytest.raises(ConfigError, match="series.TS_01.'pix'"):
         ConfigFile.load(
-            cfg, known_options={"voltage", "coords_angpix", "paths"}, package="cets-warpm", command="to-cets",
+            cfg,
+            known_options={"voltage", "coords_angpix", "paths"},
+            package="cets-warpm",
+            command="to-cets",
         )
     with pytest.raises(ConfigError, match="cets-warpm.'paths'"):
         ConfigFile.load(cfg, known_options={"voltage", "coords_angpix", "pix"}, package="cets-warpm", command="to-cets")
