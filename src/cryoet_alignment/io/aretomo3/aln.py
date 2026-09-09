@@ -11,7 +11,9 @@ class GlobalAlignmentInfo(BaseModel):
     """Global alignment information for one section of a tilt series.
 
     Attributes:
-        sec (int): Section index in the FINAL tilt series used for reconstruction, after removal of DarkFrames (0-based).
+        sec (int): 1-based index of the image in the tilt-angle-sorted RAW stack (dark frames included).
+            AreTomo3 assigns ``i + 1`` per raw section (``CTiltSeries::ResetSecIndices``) and preserves the value
+            across dark-frame removal (``CAlignParam::RemoveDarkFrames``), so ``sec - 1`` is the raw z index.
         rot (float): Tilt Axis Rotation angle in degrees.
         gmag (float): Magnification change.
         tx (float): X translation in pixels.
@@ -73,9 +75,10 @@ class DarkFrameInfo(BaseModel):
     """Dark frame information for one section of a tilt series.
 
     Attributes:
-        section_idx (int): Section index in the INPUT tilt series, before removal of DarkFrames (0-based).
-        val2 (int): TBD
-        angle (float): Tilt angle in degrees.
+        section_idx (int): 0-based index of the dark image in the tilt-angle-sorted RAW stack.
+        val2 (int): The image's 1-based SEC index (``section_idx + 1``); AreTomo3 writes both
+            (``CSaveAlignFile.cpp:90-96``). Older files carry 0 here.
+        angle (float): Tilt angle in degrees (AlphaOffset included, as for the TILT column).
     """
 
     section_idx: int
@@ -201,6 +204,64 @@ class AreTomo3ALN(FileIOBase):
     @classmethod
     def validate_offset(cls, value):
         return 0.0 if value is None else value
+
+    def model_post_init(self, context, /) -> None:
+        n_raw = int(self.RawSize[2])
+        n_dark = len(self.DarkFrames)
+        n_glob = len(self.GlobalAlignments)
+        if n_dark + n_glob != n_raw:
+            raise ValueError(
+                f".aln: RawSize[2] = {n_raw} but DarkFrames ({n_dark}) + global rows ({n_glob}) = {n_dark + n_glob}",
+            )
+        n_local = 0 if self.LocalAlignments is None else len(self.LocalAlignments)
+        if n_local != n_glob * self.NumPatches:
+            raise ValueError(
+                f".aln: {n_local} local rows but NumPatches ({self.NumPatches}) x global rows ({n_glob}) "
+                f"= {n_glob * self.NumPatches}",
+            )
+        secs = [g.sec for g in self.GlobalAlignments]
+        if any(b <= a for a, b in zip(secs, secs[1:])):
+            raise ValueError(f".aln: SEC column is not strictly ascending: {secs}")
+        covered = sorted([sec - 1 for sec in secs] + [d.section_idx for d in self.DarkFrames])
+        if covered != list(range(n_raw)):
+            raise ValueError(
+                ".aln: SEC-1 of the global rows together with the DarkFrame indices must enumerate every raw "
+                f"section 0..{n_raw - 1}; got {covered}",
+            )
+
+    @property
+    def is_rigid(self) -> bool:
+        """True when the file carries no patch (local) alignment."""
+        return self.NumPatches == 0
+
+    @property
+    def n_raw(self) -> int:
+        """Number of sections in the raw (dark frames included) stack."""
+        return int(self.RawSize[2])
+
+    def z_indices(self) -> List[int]:
+        """0-based raw-stack section of every global row (``SEC - 1``), in row order."""
+        return [g.sec - 1 for g in self.GlobalAlignments]
+
+    def dark_indices(self) -> List[int]:
+        """0-based raw-stack sections of the dark frames, in header order."""
+        return [d.section_idx for d in self.DarkFrames]
+
+    def raw_tilts(self) -> List[float]:
+        """TILT (AlphaOffset included) per raw section, dark frames re-inserted at their positions."""
+        tilts: List[Optional[float]] = [None] * self.n_raw
+        for g in self.GlobalAlignments:
+            tilts[g.sec - 1] = g.tilt
+        for d in self.DarkFrames:
+            tilts[d.section_idx] = d.angle
+        return [float(t) for t in tilts]  # type: ignore[arg-type]
+
+    def row_slots(self) -> List[int]:
+        """For every raw section, the index into ``GlobalAlignments`` (or -1 for a dark frame)."""
+        slots = [-1] * self.n_raw
+        for i, g in enumerate(self.GlobalAlignments):
+            slots[g.sec - 1] = i
+        return slots
 
     @classmethod
     def from_string(cls, text: str) -> "AreTomo3ALN":

@@ -350,7 +350,7 @@ def test_aretomo3_to_relion_file_and_back(tmp_path):
     aln = _make_simple_aln()
     pix = 2.0
 
-    alignment = Alignment.from_aretomo3(aln, vol_size=(512, 512, 400))
+    alignment = Alignment.from_aretomo3(aln, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
     relion = alignment.to_relion("TS_A", pixel_size_a=pix)
     assert relion.n_tilts == 5
     for ali, e in zip(aln.GlobalAlignments, relion.entries):
@@ -426,7 +426,7 @@ def test_api_read_write(tmp_path):
 
 def test_api_read_cdp_regression(tmp_path):
     """reader="cdp" used to call a nonexistent Alignment.from_cdp."""
-    alignment = Alignment.from_aretomo3(_make_simple_aln(), vol_size=(512, 512, 400))
+    alignment = Alignment.from_aretomo3(_make_simple_aln(), vol_size_px=(512, 512, 400), pixel_size_a=2.0)
     out = tmp_path / "alignment.json"
     write(alignment, out)
     back = read(out, reader="cdp")
