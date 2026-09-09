@@ -222,12 +222,23 @@ class AreTomo3ALN(FileIOBase):
         secs = [g.sec for g in self.GlobalAlignments]
         if any(b <= a for a, b in zip(secs, secs[1:])):
             raise ValueError(f".aln: SEC column is not strictly ascending: {secs}")
-        covered = sorted([sec - 1 for sec in secs] + [d.section_idx for d in self.DarkFrames])
-        if covered != list(range(n_raw)):
+        darks = [d.section_idx for d in self.DarkFrames]
+        expected = list(range(n_raw))
+        if sorted([sec - 1 for sec in secs] + darks) == expected:
+            base = 1  # AreTomo3: SEC = 1-based tilt-sorted raw index (CTiltSeries::ResetSecIndices)
+        elif sorted(secs + darks) == expected:
+            base = 0  # legacy (AreTomo2-era) files number sections from 0
+        else:
             raise ValueError(
-                ".aln: SEC-1 of the global rows together with the DarkFrame indices must enumerate every raw "
-                f"section 0..{n_raw - 1}; got {covered}",
+                ".aln: the SEC column together with the DarkFrame indices must enumerate every raw section "
+                f"0..{n_raw - 1} (1-based SEC as AreTomo3 writes, or 0-based legacy); got SEC {secs}, darks {darks}",
             )
+        object.__setattr__(self, "_sec_base", base)
+
+    @property
+    def sec_base(self) -> int:
+        """1 for AreTomo3 files (SEC is 1-based), 0 for legacy 0-based files; ``z_indices`` accounts for it."""
+        return getattr(self, "_sec_base", 1)
 
     @property
     def is_rigid(self) -> bool:
@@ -240,8 +251,8 @@ class AreTomo3ALN(FileIOBase):
         return int(self.RawSize[2])
 
     def z_indices(self) -> List[int]:
-        """0-based raw-stack section of every global row (``SEC - 1``), in row order."""
-        return [g.sec - 1 for g in self.GlobalAlignments]
+        """0-based raw-stack section of every global row (``SEC - sec_base``), in row order."""
+        return [g.sec - self.sec_base for g in self.GlobalAlignments]
 
     def dark_indices(self) -> List[int]:
         """0-based raw-stack sections of the dark frames, in header order."""
@@ -251,7 +262,7 @@ class AreTomo3ALN(FileIOBase):
         """TILT (AlphaOffset included) per raw section, dark frames re-inserted at their positions."""
         tilts: List[Optional[float]] = [None] * self.n_raw
         for g in self.GlobalAlignments:
-            tilts[g.sec - 1] = g.tilt
+            tilts[g.sec - self.sec_base] = g.tilt
         for d in self.DarkFrames:
             tilts[d.section_idx] = d.angle
         return [float(t) for t in tilts]  # type: ignore[arg-type]
@@ -260,7 +271,7 @@ class AreTomo3ALN(FileIOBase):
         """For every raw section, the index into ``GlobalAlignments`` (or -1 for a dark frame)."""
         slots = [-1] * self.n_raw
         for i, g in enumerate(self.GlobalAlignments):
-            slots[g.sec - 1] = i
+            slots[g.sec - self.sec_base] = i
         return slots
 
     @classmethod
