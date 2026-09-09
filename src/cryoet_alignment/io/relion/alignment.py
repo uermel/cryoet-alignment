@@ -87,22 +87,29 @@ class RelionAlignmentEntry(BaseModel):
     pre_exposure: float = 0.0
 
 
-def _rot_x(deg: float) -> np.ndarray:
+def rot_x(deg: float) -> np.ndarray:
+    """Active right-handed rotation about X, ``p' = R p`` (RELION ``t3Matrix::rotation`` convention)."""
     r = math.radians(deg)
     c, s = math.cos(r), math.sin(r)
     return np.array([[1, 0, 0], [0, c, -s], [0, s, c]], dtype=np.float64)
 
 
-def _rot_y(deg: float) -> np.ndarray:
+def rot_y(deg: float) -> np.ndarray:
+    """Active right-handed rotation about Y: ``x' = x cos + z sin``."""
     r = math.radians(deg)
     c, s = math.cos(r), math.sin(r)
     return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]], dtype=np.float64)
 
 
-def _rot_z(deg: float) -> np.ndarray:
+def rot_z(deg: float) -> np.ndarray:
+    """Active right-handed rotation about Z (counter-clockwise in the XY plane)."""
     r = math.radians(deg)
     c, s = math.cos(r), math.sin(r)
     return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]], dtype=np.float64)
+
+
+# Backwards-compatible private aliases.
+_rot_x, _rot_y, _rot_z = rot_x, rot_y, rot_z
 
 
 def projection_matrix(

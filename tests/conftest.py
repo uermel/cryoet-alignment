@@ -12,123 +12,40 @@ from cryoet_alignment.io.imod.xf import ImodXF, ImodXFInfo
 # Read AreTomo3
 @pytest.fixture
 def aln_file() -> Tuple[Path, AreTomo3ALN]:
+    """A small but self-consistent AreTomo3 .aln: RawSize z = 8, dark frames at raw
+    sections 1 (SEC 2) and 6 (SEC 7), six global rows with SEC 1,3,4,5,6,8 and
+    NumPatches = 2 (12 local rows over the dark-removed list)."""
+    globals_ = [
+        (1, 24.786, -2.677, -67.50),
+        (3, 34.451, -8.599, -64.50),
+        (4, 9.951, -7.690, -63.00),
+        (5, 5.538, -2.504, -61.50),
+        (6, -3.120, 1.877, -60.00),
+        (8, 7.004, -0.331, 67.50),
+    ]
+    vals = [(-558.42, -802.00, -100.07, 24.43), (-274.86, -757.91, -36.95, 11.98)]
     res = AreTomo3ALN(
         header="# AreTomo Alignment / Priims bprmMn",
-        RawSize=(2032, 2032, 90),
-        NumPatches=16,
+        RawSize=(2032, 2032, 8),
+        NumPatches=2,
         DarkFrames=[
-            DarkFrameInfo(section_idx=1, val2=0, angle=-66.00),
-            DarkFrameInfo(section_idx=2, val2=0, angle=-64.50),
-            DarkFrameInfo(section_idx=88, val2=0, angle=66.00),
-            DarkFrameInfo(section_idx=89, val2=0, angle=67.50),
+            DarkFrameInfo(section_idx=1, val2=2, angle=-66.00),
+            DarkFrameInfo(section_idx=6, val2=7, angle=66.00),
         ],
         AlphaOffset=0.00,
         BetaOffset=0.00,
         GlobalAlignments=[
             GlobalAlignmentInfo(
-                sec=1,
-                rot=-12.6611,
-                gmag=1.00000,
-                tx=24.786,
-                ty=-2.677,
-                smean=1.00,
-                sfit=1.00,
-                scale=1.00,
-                base=0.00,
-                tilt=-61.50,
-            ),
-            GlobalAlignmentInfo(
-                sec=2,
-                rot=-12.6611,
-                gmag=1.00000,
-                tx=34.451,
-                ty=-8.599,
-                smean=1.00,
-                sfit=1.00,
-                scale=1.00,
-                base=0.00,
-                tilt=-60.00,
-            ),
-            GlobalAlignmentInfo(
-                sec=3,
-                rot=-12.6611,
-                gmag=1.00000,
-                tx=9.951,
-                ty=-7.690,
-                smean=1.00,
-                sfit=1.00,
-                scale=1.00,
-                base=0.00,
-                tilt=-58.50,
-            ),
-            GlobalAlignmentInfo(
-                sec=4,
-                rot=-12.6611,
-                gmag=1.00000,
-                tx=5.538,
-                ty=-2.504,
-                smean=1.00,
-                sfit=1.00,
-                scale=1.00,
-                base=0.00,
-                tilt=-57.00,
-            ),
+                sec=sec, rot=-12.6611, gmag=1.0, tx=tx, ty=ty, smean=1.0, sfit=1.0, scale=1.0, base=0.0, tilt=tilt,
+            )
+            for sec, tx, ty, tilt in globals_
         ],
         LocalAlignments=[
             LocalAlignmentInfo(
-                sec_idx=0,
-                patch_idx=0,
-                center_x=-558.42,
-                center_y=-802.00,
-                shift_x=-100.07,
-                shift_y=24.43,
-                is_reliable=1.0,
-            ),
-            LocalAlignmentInfo(
-                sec_idx=0,
-                patch_idx=1,
-                center_x=-274.86,
-                center_y=-757.91,
-                shift_x=-36.95,
-                shift_y=11.98,
-                is_reliable=1.0,
-            ),
-            LocalAlignmentInfo(
-                sec_idx=0,
-                patch_idx=2,
-                center_x=19.88,
-                center_y=-701.35,
-                shift_x=29.18,
-                shift_y=-5.75,
-                is_reliable=1.0,
-            ),
-            LocalAlignmentInfo(
-                sec_idx=0,
-                patch_idx=3,
-                center_x=233.10,
-                center_y=-680.25,
-                shift_x=55.29,
-                shift_y=-14.05,
-                is_reliable=1.0,
-            ),
-            LocalAlignmentInfo(
-                sec_idx=0,
-                patch_idx=4,
-                center_x=-485.74,
-                center_y=-308.27,
-                shift_x=-33.72,
-                shift_y=10.06,
-                is_reliable=1.0,
-            ),
-            LocalAlignmentInfo(
-                sec_idx=0,
-                patch_idx=5,
-                center_x=-201.52,
-                center_y=-264.31,
-                shift_x=-10.65,
-                shift_y=2.03,
-                is_reliable=1.0,
-            ),
+                sec_idx=s, patch_idx=p, center_x=cx + s, center_y=cy, shift_x=sx, shift_y=sy, is_reliable=1.0,
+            )
+            for s in range(6)
+            for p, (cx, cy, sx, sy) in enumerate(vals)
         ],
     )
     return Path(__file__).parent / "data" / "test.aln", res

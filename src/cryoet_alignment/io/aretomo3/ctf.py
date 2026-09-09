@@ -35,11 +35,14 @@ from pydantic import BaseModel, ConfigDict
 
 from cryoet_alignment.io.base import FileIOBase
 
+# AreTomo3 writes exactly ONE header line (CSaveCtfResults.cpp:79-86); the
+# cryoET Data Portal's CTFFIND parser pops exactly one line before parsing
+# (cryoet-data-portal-backend common/ctf_converter.py:47-54), so a multi-line
+# header would break ingestion.
 _HEADER = (
-    "# Columns: #1 micrograph number; #2 - defocus 1 [A]; #3 - defocus 2; "
-    "#4 - azimuth of astigmatism;\n"
-    "#5 - additional phase shift [radian]; #6 - cross correlation;\n"
-    "#7 - spacing (in Angstroms) up to which CTF rings were fit successfully; #8 - dfHand\n"
+    "# Columns: #1 micrograph number; #2 - defocus 1 [A]; #3 - defocus 2; #4 - azimuth of astigmatism; "
+    "#5 - additional phase shift [radian]; #6 - cross correlation; "
+    "#7 - spacing (in Angstroms) up to which CTF rings were fit successfully; #8 - dfHand"
 )
 
 
@@ -130,12 +133,26 @@ class AreTomo3CTF(FileIOBase):
             )
         return cls(rows=rows)
 
+    @property
+    def has_df_hand(self) -> bool:
+        """True when every row carries a defocus handedness (8-column file)."""
+        return all(r.df_hand is not None for r in self.rows)
+
     def __str__(self) -> str:
-        out = [_HEADER.rstrip("\n")]
+        """Serialize in AreTomo3's own layout (``"%4d %8.2f %8.2f %8.2f %9.4f %8.4f %8.4f %3d"``).
+
+        The dfHand column is written only when every row has one; a file
+        with unknown handedness is emitted as a 7-column CTFFIND-style file
+        rather than inventing a value.
+        """
+        out = [_HEADER]
+        with_hand = self.has_df_hand
         for i, r in enumerate(self.rows):
-            hand = r.df_hand if r.df_hand is not None else 1
-            out.append(
+            line = (
                 f"{i + 1:4d} {r.df_max_a:8.2f} {r.df_min_a:8.2f} {r.azimuth_deg:8.2f} "
-                f"{r.phase_rad:9.4f} {r.score:8.4f} {r.res_a:8.4f} {hand:3d}",
+                f"{r.phase_rad:9.4f} {r.score:8.4f} {r.res_a:8.4f}"
             )
+            if with_hand:
+                line += f" {r.df_hand:3d}"
+            out.append(line)
         return "\n".join(out) + "\n"

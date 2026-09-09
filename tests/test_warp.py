@@ -74,7 +74,7 @@ def test_aretomo3_to_warp_to_aretomo3_roundtrip():
     image_size_px = (512, 512)
 
     # AreTomo → canonical Alignment
-    alignment = Alignment.from_aretomo3(aln, vol_size=(512, 512, 400))
+    alignment = Alignment.from_aretomo3(aln, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
 
     # canonical → Warp
     warp = alignment.to_warp(pixel_size_a=pixel_size_a, image_size_px=image_size_px)
@@ -83,7 +83,7 @@ def test_aretomo3_to_warp_to_aretomo3_roundtrip():
     assert warp.pixel_size_a == pixel_size_a
 
     # Warp → canonical Alignment
-    alignment_rt = Alignment.from_warp(warp, vol_size=(512, 512, 400))
+    alignment_rt = Alignment.from_warp(warp, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
 
     # canonical → AreTomo
     aln_rt = alignment_rt.to_aretomo(ts_size=(512, 512, 5))
@@ -118,7 +118,7 @@ def test_warp_to_alignment_to_warp_roundtrip():
         entries=entries,
     )
 
-    alignment = Alignment.from_warp(warp, vol_size=(512, 512, 400))
+    alignment = Alignment.from_warp(warp, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
     warp_rt = alignment.to_warp(pixel_size_a=pixel_size_a, image_size_px=(512, 512))
 
     assert warp_rt.n_tilts == warp.n_tilts
@@ -134,7 +134,7 @@ def test_to_warp_pixel_unit_conversion():
     """Sanity-check that the px ↔ Å conversion in ``to_warp`` actually scales by
     ``pixel_size_a`` rather than copying the value through."""
     aln = _make_simple_aln(n_tilts=3, pixel_size_a=2.0)
-    alignment = Alignment.from_aretomo3(aln, vol_size=(512, 512, 400))
+    alignment = Alignment.from_aretomo3(aln, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
 
     pixel_size_a = 2.0
     warp = alignment.to_warp(pixel_size_a=pixel_size_a, image_size_px=(512, 512))
@@ -170,7 +170,7 @@ def test_from_warp_pixel_unit_conversion():
         ],
     )
 
-    alignment = Alignment.from_warp(warp, vol_size=(512, 512, 400))
+    alignment = Alignment.from_warp(warp, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
 
     assert alignment.per_section_alignment_parameters[0].x_offset == pytest.approx(
         40.0 / pixel_size_a,
@@ -182,27 +182,38 @@ def test_from_warp_pixel_unit_conversion():
     )
 
 
-def test_warp_drops_dark_frames_correctly():
-    """If the source AreTomo3 .aln has dark frames, they should NOT appear in the
-    Warp representation (Warp's per-tilt arrays cover the kept tilts only)."""
-    n_kept = 5
-    aln = _make_simple_aln(n_tilts=n_kept, pixel_size_a=2.0)
-    # Inject one dark frame at z_index=2 — but to keep the AreTomo3ALN consistent we
-    # build a fresh one with the dark frame in place.
+def test_warp_dark_frames_become_unused_rows():
+    """A dark frame in the source .aln is a Warp row with UseTilt=False (Warp aligns the
+    XML rows positionally with the .tomostar, so rows must never be dropped); its angle
+    comes from the DarkFrame line and it drops out again on the way back."""
     from cryoet_alignment.io.aretomo3.aln import DarkFrameInfo
 
+    aln = _make_simple_aln(n_tilts=5, pixel_size_a=2.0)
+    rows = [g.model_copy(update={"sec": s}) for g, s in zip(aln.GlobalAlignments, (1, 2, 4, 5, 6))]
     aln = AreTomo3ALN(
-        RawSize=(512, 512, n_kept + 1),
+        RawSize=(512, 512, 6),
         NumPatches=0,
-        DarkFrames=[DarkFrameInfo(section_idx=2, val2=0, angle=0.0)],
+        DarkFrames=[DarkFrameInfo(section_idx=2, val2=3, angle=-1.5)],
         AlphaOffset=0.0,
         BetaOffset=0.0,
-        GlobalAlignments=aln.GlobalAlignments,
+        GlobalAlignments=rows,
     )
+    assert aln.z_indices() == [0, 1, 3, 4, 5]
 
-    alignment = Alignment.from_aretomo3(aln, vol_size=(512, 512, 400))
-    warp = alignment.to_warp(pixel_size_a=2.0, image_size_px=(512, 512))
-    assert warp.n_tilts == n_kept
+    alignment = Alignment.from_aretomo3(aln, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
+    assert [p.z_index for p in alignment.per_section_alignment_parameters] == [0, 1, 3, 4, 5]
+    warp = alignment.to_warp(pixel_size_a=2.0, image_size_px=(512, 512), n_rows=6, dark_angles={2: -1.5})
+    assert warp.n_tilts == 6
+    assert [e.use_tilt for e in warp.entries] == [True, True, False, True, True, True]
+    assert warp.entries[2].tilt_angle == pytest.approx(1.5)  # WARP_TILT_ANGLE_SIGN * -1.5
+
+    back = Alignment.from_warp(warp)
+    assert [p.z_index for p in back.per_section_alignment_parameters] == [0, 1, 3, 4, 5]
+    aln_rt = back.to_aretomo(ts_size=(512, 512, 6), dark_angles={2: -1.5})
+    assert [d.model_dump() for d in aln_rt.DarkFrames] == [{"section_idx": 2, "val2": 3, "angle": -1.5}]
+    assert [g.sec for g in aln_rt.GlobalAlignments] == [1, 2, 4, 5, 6]
+    with pytest.raises(ValueError, match="n_rows"):
+        alignment.to_warp(pixel_size_a=2.0, image_size_px=(512, 512), n_rows=5)
 
 
 # ---------------------------------------------------------------------------
@@ -273,14 +284,14 @@ def test_e2e_aln_to_warp_file_and_back(tmp_path):
     aln = _make_simple_aln(n_tilts=5, pixel_size_a=2.0)
     pixel_size_a = 2.0
 
-    alignment = Alignment.from_aretomo3(aln, vol_size=(512, 512, 400))
+    alignment = Alignment.from_aretomo3(aln, vol_size_px=(512, 512, 400), pixel_size_a=2.0)
     warp = alignment.to_warp(pixel_size_a=pixel_size_a, image_size_px=(512, 512))
     xml_path = tmp_path / "TS_e2e.xml"
     warp.to_file(xml_path)
 
     alignment_rt = Alignment.from_warp_file(
         xml_path,
-        vol_size=(512, 512, 400),
+        vol_size_px=(512, 512, 400),
         pixel_size_a=pixel_size_a,
     )
     aln_rt = alignment_rt.to_aretomo(ts_size=(512, 512, 5))
@@ -299,7 +310,7 @@ def test_missing_pixel_size_raises():
     loudly instead of guessing (a silent 0 would zero all shifts downstream)."""
     xml = "<TiltSeries><Angles>-30\n0\n30</Angles></TiltSeries>"
     with pytest.raises(ValueError, match="pixel_size_a"):
-        WarpAlignment.from_string(xml)
+        WarpAlignment.from_string(xml, strict_dims=False)
 
 
 def test_no_angles_rejected():
@@ -307,11 +318,18 @@ def test_no_angles_rejected():
         WarpAlignment.from_string("<TiltSeries></TiltSeries>", pixel_size_a=2.0)
 
 
-def test_dims_absent_read_as_zeros():
-    """Older Warp exports carry no dimension attributes — they read as zeros
-    (pinned behavior), and absent per-tilt elements default to zeros."""
+def test_dims_absent_refused_unless_overridden():
+    """Older / re-saved Warp exports carry no or zero dimension attributes: refused by
+    default (a zero box silently breaks every projection), readable with explicit
+    overrides or ``strict_dims=False`` for inspection; absent per-tilt elements default."""
     xml = "<TiltSeries><Angles>-30\n0\n30</Angles></TiltSeries>"
-    warp = WarpAlignment.from_string(xml, pixel_size_a=2.0)
+    with pytest.raises(ValueError, match="ImageDimensionsAngstrom"):
+        WarpAlignment.from_string(xml, pixel_size_a=2.0)
+    warp_ok = WarpAlignment.from_string(
+        xml, pixel_size_a=2.0, image_dims_a=[1024.0, 1024.0], volume_dims_a=[1024.0, 1024.0, 800.0],
+    )
+    assert warp_ok.volume_dimensions_physical == [1024.0, 1024.0, 800.0]
+    warp = WarpAlignment.from_string(xml, pixel_size_a=2.0, strict_dims=False)
     assert warp.n_tilts == 3
     assert warp.image_dimensions_physical == [0.0, 0.0]
     assert warp.volume_dimensions_physical == [0.0, 0.0, 0.0]
@@ -322,22 +340,29 @@ def test_dims_absent_read_as_zeros():
 def test_per_tilt_length_mismatch_rejected():
     xml = "<TiltSeries><Angles>-30\n0\n30</Angles><AxisAngle>85.5\n85.6</AxisAngle></TiltSeries>"
     with pytest.raises(ValueError, match="AxisAngle"):
-        WarpAlignment.from_string(xml, pixel_size_a=2.0)
+        WarpAlignment.from_string(xml, pixel_size_a=2.0, strict_dims=False)
 
 
 def test_real_warp_export_fixture():
     """A real (warpylib-written, EMPIAR-10499-derived) Warp XML: UTF-8 BOM,
     no dimension attributes, stamped default PixelSize."""
-    warp = WarpAlignment.from_file(DATA_DIR / "00254.xml", pixel_size_a=1.7005)
+    with pytest.raises(ValueError, match="ImageDimensionsAngstrom"):
+        WarpAlignment.from_file(DATA_DIR / "00254.xml", pixel_size_a=1.7005)
+    warp = WarpAlignment.from_file(DATA_DIR / "00254.xml", pixel_size_a=1.7005, strict_dims=False)
     assert warp.n_tilts == 41
     assert warp.pixel_size_a == 1.7005  # explicit value wins over the stamp
+    assert warp.pixel_size_source == "explicit"
     assert warp.image_dimensions_physical == [0.0, 0.0]
+    assert warp.entries[0].movie_path == "../2/TS_01_041_-60.0.tif"
+    assert warp.entries[0].dose == 117.0
+    assert warp.is_rigid and not warp.has_ctf
     assert min(e.tilt_angle for e in warp.entries) == pytest.approx(-60.01, abs=1e-6)
     assert all(abs(e.tilt_axis_offset_x) < 1e4 for e in warp.entries)
 
     # without the explicit value, the stamped CTF PixelSize is used
-    warp_stamped = WarpAlignment.from_file(DATA_DIR / "00254.xml")
+    warp_stamped = WarpAlignment.from_file(DATA_DIR / "00254.xml", strict_dims=False)
     assert warp_stamped.pixel_size_a == 1.0
+    assert warp_stamped.pixel_size_source == "ctf"
 
 
 def test_native_io_cross_validated_against_warpylib(tmp_path):

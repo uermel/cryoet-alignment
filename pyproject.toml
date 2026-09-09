@@ -20,6 +20,7 @@ dependencies = [
     "pandas",
     "starfile>=0.5",
     "cryoet-data-portal>=4.3.1",
+    "pyyaml",
 ]
 authors = [
   {name = "Utz H. Ermel", email = "utz.ermel@czii.org"},
