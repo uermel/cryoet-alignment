@@ -113,6 +113,35 @@ class AreTomo3TLT(FileIOBase):
                 )
 
     @classmethod
+    def from_aln(
+        cls,
+        aln,
+        acq_index_1b: Optional[List[int]] = None,
+        dose: Optional[List[float]] = None,
+    ) -> "AreTomo3TLT":
+        """The ``_TLT.txt`` companion of an AreTomo3 ``.aln`` for ``-Cmd 2``.
+
+        One row per raw section in raw-stack order: the refined ``TILT`` (AlphaOffset included, as AreTomo3
+        applies the rows positionally) for aligned sections and the ``# DarkFrame`` angle for dark ones.
+        ``acq_index_1b`` and ``dose`` are per raw section; both or neither (AreTomo3 accepts 1/2/3 columns).
+        """
+        tilts = aln.raw_tilts()
+        n = len(tilts)
+        if (acq_index_1b is None) != (dose is None):
+            raise ValueError("acq_index_1b and dose must be given together")
+        if acq_index_1b is not None and (len(acq_index_1b) != n or len(dose) != n):
+            raise ValueError(f"acq_index_1b/dose must have one value per raw section ({n})")
+        rows = [
+            TltInfo(
+                tilt=tilts[i],
+                acq_index=None if acq_index_1b is None else int(acq_index_1b[i]),
+                dose=None if dose is None else float(dose[i]),
+            )
+            for i in range(n)
+        ]
+        return cls(rows=rows)
+
+    @classmethod
     def from_string(cls, text: str) -> "AreTomo3TLT":
         rows = []
         for line in text.splitlines():
