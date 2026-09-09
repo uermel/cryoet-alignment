@@ -210,6 +210,9 @@ def test_g7_two_alignments_distinct_ids_and_explicit_selection():
     assert select_tomogram(region, a1, "TS_tomo2") is tomo2
     comp = Companion(alignments=[AlignmentCompanion(name="aretomo3", tilt_series_id="TS", tomogram_ids=["TS_tomo"])])
     assert select_tomogram(region, a1, companion=comp) is tomo
+    comp = Companion(alignments=[AlignmentCompanion(name="aretomo3", tilt_series_id="TS", reference_tomogram_id="TS_tomo2",
+                                                    tomogram_ids=["TS_tomo", "TS_tomo2"])])
+    assert select_tomogram(region, a1, companion=comp) is tomo2
 
 
 # ------------------------------------------------------------------ G10: CTF nulls and units

@@ -336,9 +336,15 @@ def tomogram_ids_for(region, cets_alignment, companion=None) -> List[str]:
 
 
 def select_tomogram(region, cets_alignment, selector: Optional[str] = None, companion=None):
-    ids = tomogram_ids_for(region, cets_alignment, companion)
+    """The reference tomogram: explicit selector > companion ``reference_tomogram_id`` > the single candidate."""
     if selector is not None:
         return find_by_id(region.tomograms, selector, "tomogram")
+    if companion is not None:
+        name = alignment_name_of(cets_alignment)
+        entry = companion.alignment(cets_alignment.tilt_series_id, name) if name else None
+        if entry is not None and entry.reference_tomogram_id:
+            return find_by_id(region.tomograms, entry.reference_tomogram_id, "tomogram")
+    ids = tomogram_ids_for(region, cets_alignment, companion)
     if len(ids) == 1:
         return find_by_id(region.tomograms, ids[0], "tomogram")
     raise ValueError(
