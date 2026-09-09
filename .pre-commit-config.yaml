@@ -18,4 +18,6 @@ repos:
   - id: check-json
   - id: check-merge-conflict
   - id: end-of-file-fixer
+    # Warp writes .settings / .tomostar / tilt-series XML without a trailing newline; keep the vendored files verbatim
+    exclude: '\.(settings|tomostar)$|tests/data/warp/.*\.xml$'
   - id: trailing-whitespace
