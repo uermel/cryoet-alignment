@@ -55,7 +55,19 @@ class ConfigFile:
     path: Optional[Path] = None
 
     @classmethod
-    def load(cls, path: Union[str, Path], known_options: Optional[Iterable[str]] = None) -> "ConfigFile":
+    def load(
+        cls,
+        path: Union[str, Path],
+        known_options: Optional[Iterable[str]] = None,
+        *,
+        package: Optional[str] = None,
+        command: Optional[str] = None,
+    ) -> "ConfigFile":
+        """Parse the YAML and validate the keys this command can consume.
+
+        With ``package``/``command`` given, only the sections this command reads are checked (``cets``, the
+        package's scalar keys, ``<package>.<command>``, ``series.*``); sections of other packages or commands are
+        left alone so one file can serve every converter. Without them every section is checked (legacy)."""
         import yaml
 
         p = Path(path)
@@ -64,10 +76,10 @@ class ConfigFile:
             raise ConfigError(f"{p}: top level must be a mapping")
         cf = cls(data=data, path=p)
         if known_options is not None:
-            cf.check_keys(set(known_options))
+            cf.check_keys(set(known_options), package=package, command=command)
         return cf
 
-    def check_keys(self, known: set) -> None:
+    def check_keys(self, known: set, *, package: Optional[str] = None, command: Optional[str] = None) -> None:
         def _check(section: Dict[str, Any], where: str) -> None:
             for k, v in section.items():
                 if isinstance(v, dict):
@@ -78,7 +90,16 @@ class ConfigFile:
         for top, section in self.data.items():
             if not isinstance(section, dict):
                 raise ConfigError(f"{self.path}: section {top!r} must be a mapping")
-            _check(section, top)
+            if package is None or command is None or top in ("cets", "series"):
+                _check(section, top)
+            elif top == package:
+                for k, v in section.items():
+                    if isinstance(v, dict):
+                        if k == command:
+                            _check(v, f"{top}.{k}")
+                    elif k not in known:
+                        raise ConfigError(f"{self.path}: unknown option {top}.{k!r} (known: {sorted(known)})")
+            # other packages' sections are not ours to validate
 
     def lookup(self, option: str, package: str, command: str, series: Optional[str] = None):
         """``series.<id>`` > ``<package>.<command>`` > ``<package>`` > ``cets``; ``_MISSING`` when absent."""
