@@ -26,7 +26,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
-SOURCES = ("cli", "config", "companion", "discovered", "default")
+SOURCES = ("cli", "config", "companion", "discovered", "default", "absent")
 
 _MISSING = object()
 
@@ -160,6 +160,16 @@ class Resolver:
             res = Resolved(res.name, convert(res.value), res.source, res.note)
         self.report.append(res)
         return res
+
+    def optional(self, option: str, *, companion: Any = _MISSING, discovered: Any = _MISSING, note: str = "",
+                 absent: Any = None, convert: Optional[Callable[[Any], Any]] = None) -> Any:
+        """Resolve a value that may legitimately be absent (companion-only metadata, boolean flags): no
+        warning, source ``absent`` and value ``absent`` when nothing supplies it."""
+        if option in self.cli or (self.config and self.config.lookup(option, self.package, self.command, self.series) is not _MISSING) \
+                or (companion is not _MISSING and companion is not None) or (discovered is not _MISSING and discovered is not None):
+            return self.resolve(option, companion=companion, discovered=discovered, note=note, convert=convert).value
+        self.report.append(Resolved(option, absent, "absent", note))
+        return absent
 
     def require(self, option: str, **kwargs) -> Any:
         kwargs.pop("default", None)

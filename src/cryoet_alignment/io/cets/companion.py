@@ -44,6 +44,7 @@ class TiltSeriesCompanion(BaseModel):
     are_angles_inverted: Optional[bool] = None
     defocus_hand: Optional[int] = None
     defocus_hand_convention: Optional[str] = None
+    collection_metadata_path: Optional[str] = None  # the acquisition mdoc (path relative to the document, or a URL)
     images: Dict[str, ImageCompanion] = Field(default_factory=dict)  # keyed by TiltImage.id
 
 
@@ -56,10 +57,12 @@ class AlignmentCompanion(BaseModel):
     alignment_type: Optional[str] = None
     method_type: Optional[str] = None
     is_portal_standard: Optional[bool] = None
-    tomogram_ids: List[str] = Field(default_factory=list)
+    reference_tomogram_id: Optional[str] = None  # the tomogram whose frame the alignment is expressed in
+    tomogram_ids: List[str] = Field(default_factory=list)  # every reconstruction bound to this alignment
     native_volume_dimension_a: Optional[Dict[str, float]] = None
     frame_convention: Optional[Dict[str, str]] = None
     dropped: List[str] = Field(default_factory=list)
+    thickness_px: Optional[int] = None  # AreTomo3 '# Thickness' (estimated sample thickness, not the box depth)
     source_ref: Optional[str] = None
 
 

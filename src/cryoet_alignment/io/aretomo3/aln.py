@@ -326,21 +326,25 @@ class AreTomo3ALN(FileIOBase):
         )
 
     def __str__(self) -> str:
-        dark_frames = "\n".join(map(str, self.DarkFrames))
+        """AreTomo3's own layout (``CSaveAlignFile.cpp``): DarkFrame lines only when present, the
+        ``# Local Alignment`` section only when ``NumPatches > 0``."""
+        dark_frames = "".join(f"{d}\n" for d in self.DarkFrames)
         global_alignments = "\n".join(map(str, self.GlobalAlignments))
-        local_alignments = "" if self.LocalAlignments is None else "\n".join(map(str, self.LocalAlignments))
+        local_section = ""
+        if self.NumPatches > 0:
+            local_alignments = "" if self.LocalAlignments is None else "\n".join(map(str, self.LocalAlignments))
+            local_section = f"# Local Alignment\n{local_alignments}\n"
         return (
             f"{self.header}\n"
             f"# RawSize = {self.RawSize[0]} {self.RawSize[1]} {self.RawSize[2]}\n"
             f"# NumPatches = {self.NumPatches}\n"
-            f"{dark_frames}\n"
+            f"{dark_frames}"
             f"# AlphaOffset ={self.AlphaOffset:>9.2f}\n"
             f"# BetaOffset ={self.BetaOffset:>9.2f}\n"
             + (f"# Thickness = {self.Thickness}\n" if self.Thickness is not None else "")
             + "# SEC     ROT         GMAG       TX          TY      SMEAN     SFIT    SCALE     BASE     TILT\n"
             f"{global_alignments}\n"
-            "# Local Alignment\n"
-            f"{local_alignments}\n"
+            f"{local_section}"
         )
 
     def get_global_alignments(
