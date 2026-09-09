@@ -164,11 +164,17 @@ def selection_options(func):
     return func
 
 
-def load_config(config_path: Optional[str], known_options: Iterable[str]) -> Optional[ConfigFile]:
+def load_config(
+    config_path: Optional[str],
+    known_options: Iterable[str],
+    package: Optional[str] = None,
+    command: Optional[str] = None,
+) -> Optional[ConfigFile]:
+    """Load ``--config``; with ``package``/``command`` only this command's sections are validated."""
     if config_path is None:
         return None
     try:
-        return ConfigFile.load(config_path, known_options=known_options)
+        return ConfigFile.load(config_path, known_options=known_options, package=package, command=command)
     except ConfigError as e:
         raise click.ClickException(str(e)) from e
 

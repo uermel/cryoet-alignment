@@ -466,3 +466,25 @@ def test_resolver_chain_and_default_warning(tmp_path):
     with pytest.raises(ConfigError, match="unknown option cets.'volt'"):
         ConfigFile.load(tmp_path / "bad.yaml", known_options={"voltage"})
     assert any("[config]" in line for line in r.lines())
+
+
+def test_config_validation_is_scoped_to_the_running_command(tmp_path):
+    """One config file serves every converter: only ``cets``, ``series`` and this command's own section are checked."""
+    cfg = tmp_path / "cets.yaml"
+    cfg.write_text(
+        "cets: {voltage: 300}\n"
+        "cets-warpm:\n  to-cets: {coords_angpix: 3.0}\n  from-cets: {series_name_style: stem}\n  paths: relative\n"
+        "cets-aretomo3:\n  to-cets: {flip_vol: 1}\n"
+        "series:\n  TS_01: {pix: 1.54}\n",
+    )
+    known = {"voltage", "coords_angpix", "paths", "pix"}
+    conf = ConfigFile.load(cfg, known_options=known, package="cets-warpm", command="to-cets")
+    assert conf.lookup("coords_angpix", "cets-warpm", "to-cets") == 3.0
+    with pytest.raises(ConfigError, match="series.TS_01.'pix'"):
+        ConfigFile.load(
+            cfg, known_options={"voltage", "coords_angpix", "paths"}, package="cets-warpm", command="to-cets",
+        )
+    with pytest.raises(ConfigError, match="cets-warpm.'paths'"):
+        ConfigFile.load(cfg, known_options={"voltage", "coords_angpix", "pix"}, package="cets-warpm", command="to-cets")
+    with pytest.raises(ConfigError, match="unknown option"):
+        ConfigFile.load(cfg, known_options=known)  # legacy: every section is checked
