@@ -1,4 +1,5 @@
-"""Unit gates of the cets-rigid/0.1 codec that need no torch: C1–C3, G7, G10, G11, G13, frames, companion."""
+"""Unit tests of the cets-rigid/0.1 codec that need no torch: round-trip identity, layouts and folding, frames,
+ids and selection, CTF nulls and units, the cets-imod adapter, the companion manifest, the config resolver."""
 
 import json
 from pathlib import Path
@@ -104,12 +105,12 @@ def _assert_hub_equal(a: Alignment, b: Alignment, tol=1e-9):
         assert abs(p.x_offset - q.x_offset) < tol and abs(p.y_offset - q.y_offset) < tol
 
 
-# ------------------------------------------------------------------ C1: identity, all frames, odd sizes
+# ------------------------------------------------------------------ identity, all frames, odd sizes
 
 
 @pytest.mark.parametrize("fmt", ["ARETOMO3", "WARP", "RELION"])
 @pytest.mark.parametrize("size,vol", [((4096, 4096), (1024, 1024, 299)), ((4095, 4097), (819, 819, 239))])
-def test_c1_roundtrip_identity(fmt, size, vol):
+def test_roundtrip_identity(fmt, size, vol):
     hub = _hub(fmt=fmt, xrot=0.3 if fmt != "ARETOMO3" else 0.0, dark=(2,))
     ts, tomo, ref, img = _scene(size=size, vol=vol)
     cets = alignment_to_cets(hub, tilt_series_id="TS", alignment_name=fmt.lower(), image=img, reference=ref)
@@ -131,7 +132,7 @@ def test_c1_roundtrip_identity(fmt, size, vol):
     validate_document(cets)
 
 
-def test_c1_frames_matter_for_odd_sizes():
+def test_frames_matter_for_odd_sizes():
     """The same document decoded into a different frame convention differs by the half-pixel deltas."""
     hub = _hub(fmt="ARETOMO3")
     ts, tomo, ref, img = _scene(size=(4095, 4095), vol=(819, 819, 239))
@@ -150,10 +151,10 @@ def test_c1_frames_matter_for_odd_sizes():
     assert 0.1 < d < 2.0
 
 
-# ------------------------------------------------------------------ C3: generic folding, layouts, rejections
+# ------------------------------------------------------------------ generic folding, layouts, rejections
 
 
-def test_c3_two_entry_and_reordered_layouts_fold_identically():
+def test_two_entry_and_reordered_layouts_fold_identically():
     hub = _hub()
     ts, tomo, ref, img = _scene()
     cets = alignment_to_cets(hub, tilt_series_id="TS", alignment_name="a", image=img, reference=ref)
@@ -257,10 +258,10 @@ def test_volume_reconciliation_refuses_mismatch():
     )
 
 
-# ------------------------------------------------------------------ G7: ids, selection
+# ------------------------------------------------------------------ ids, selection
 
 
-def test_g7_two_alignments_distinct_ids_and_explicit_selection():
+def test_two_alignments_distinct_ids_and_explicit_selection():
     hub = _hub()
     ts, tomo, ref, img = _scene()
     a1 = alignment_to_cets(hub, tilt_series_id="TS", alignment_name="aretomo3", image=img, reference=ref)
@@ -299,10 +300,10 @@ def test_g7_two_alignments_distinct_ids_and_explicit_selection():
     assert select_tomogram(region, a1, companion=comp) is tomo2
 
 
-# ------------------------------------------------------------------ G10: CTF nulls and units
+# ------------------------------------------------------------------ CTF nulls and units
 
 
-def test_g10_defocus_handedness_explicit_null_survives():
+def test_defocus_handedness_explicit_null_survives():
     ctf = ctf_metadata(defocus_u_a=20000, defocus_v_a=21000, defocus_angle_deg=200.0)
     assert (ctf.defocus_u, ctf.defocus_v, ctf.defocus_angle) == (21000.0, 20000.0, 110.0)
     assert ctf.defocus_handedness is None and ctf.phase_shift is None
@@ -332,10 +333,10 @@ def test_g10_defocus_handedness_explicit_null_survives():
     assert to_warp_values(w) == pytest.approx((2.2167659, 0.0076084905, 17.0, 0.25))
 
 
-# ------------------------------------------------------------------ G11: cets-imod adapter
+# ------------------------------------------------------------------ cets-imod adapter
 
 
-def test_g11_cets_imod_adapter_matches_from_imod():
+def test_cets_imod_adapter_matches_from_imod():
     xf = ImodXF.from_file(DATA / "convert" / "imod_1" / "tilt_1.xf")
     tlt = ImodTLT.from_file(DATA / "convert" / "imod_1" / "tilt_1.tlt")
     apix = 2.0
@@ -431,10 +432,10 @@ def test_document_dump_load(tmp_path):
     assert PROFILE_VERSION == "cets-rigid/0.1"
 
 
-# ------------------------------------------------------------------ G13: resolver / config
+# ------------------------------------------------------------------ resolver / config
 
 
-def test_g13_resolver_chain_and_default_warning(tmp_path):
+def test_resolver_chain_and_default_warning(tmp_path):
     cfg = tmp_path / "cets.yaml"
     cfg.write_text(
         "cets:\n  voltage: 300\ncets-aretomo3:\n  to-cets: {mdoc_dir: mdoc}\nseries:\n  TS_02: {pix: 1.34}\n",
