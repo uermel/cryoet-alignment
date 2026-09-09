@@ -44,9 +44,15 @@ def _hub(n_rows: int, dark: int, xrot: float) -> Alignment:
             ),
         )
     return Alignment(
-        affine_transformation_matrix=np.eye(4).tolist(), alignment_type="GLOBAL", format="WARP",
-        is_portal_standard=True, tilt_offset=0.0, volume_offset={"x": 0, "y": 0, "z": 0}, x_rotation_offset=0.0,
-        per_section_alignment_parameters=params, volume_dimension={"x": 4095 * 1.7, "y": 4096 * 1.7, "z": 1201 * 1.7},
+        affine_transformation_matrix=np.eye(4).tolist(),
+        alignment_type="GLOBAL",
+        format="WARP",
+        is_portal_standard=True,
+        tilt_offset=0.0,
+        volume_offset={"x": 0, "y": 0, "z": 0},
+        x_rotation_offset=0.0,
+        per_section_alignment_parameters=params,
+        volume_dimension={"x": 4095 * 1.7, "y": 4096 * 1.7, "z": 1201 * 1.7},
     )
 
 
@@ -103,13 +109,25 @@ def test_g2_constant_grids_are_rigid_and_folded(tmp_path: Path, xrot, level_y):
         assert abs(p.tilt_angle - q.tilt_angle) < 1e-9
 
     vol_px = (4095, 4096, 1201)
-    ts = tilt_series_entity(tilt_series_id="TS", path=None, width=4095, height=4096, pixel_size_a=s,
-                            nominal_angles=[0.0] * n_rows)
+    ts = tilt_series_entity(
+        tilt_series_id="TS",
+        path=None,
+        width=4095,
+        height=4096,
+        pixel_size_a=s,
+        nominal_angles=[0.0] * n_rows,
+    )
     tomo = tomogram_entity(tomogram_id="TS_tomo", path=None, size_px=vol_px, voxel_size_a=s, tilt_series_id="TS")
     ref = ReferenceVolume.from_tomogram(tomo)
     img = image_frame(ts.images[0])
-    cets = alignment_to_cets(hub2, tilt_series_id="TS", alignment_name="warp", image=img, reference=ref,
-                             frame=FRAME_CONVENTIONS["WARP"])
+    cets = alignment_to_cets(
+        hub2,
+        tilt_series_id="TS",
+        alignment_name="warp",
+        image=img,
+        reference=ref,
+        frame=FRAME_CONVENTIONS["WARP"],
+    )
     p_c = pts - ref.cets_centre_a()
     kept = [z for z in range(n_rows) if z != dark]
     worst = 0.0
@@ -125,8 +143,14 @@ def test_g2_constant_grids_are_rigid_and_folded(tmp_path: Path, xrot, level_y):
         e.movement_x = e.movement_y = 0.0
     w_naive.grid_audit.constant_volume_warp = [0.0, 0.0, 0.0]
     hub_naive = Alignment.from_warp(w_naive)
-    cets_naive = alignment_to_cets(hub_naive, tilt_series_id="TS", alignment_name="warp", image=img, reference=ref,
-                                   frame=FRAME_CONVENTIONS["WARP"])
+    cets_naive = alignment_to_cets(
+        hub_naive,
+        tilt_series_id="TS",
+        alignment_name="warp",
+        image=img,
+        reference=ref,
+        frame=FRAME_CONVENTIONS["WARP"],
+    )
     naive_worst = 0.0
     for pa, z in zip(cets_naive.projection_alignments, kept):
         r, t = fold_projection(pa)

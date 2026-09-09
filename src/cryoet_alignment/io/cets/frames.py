@@ -136,7 +136,10 @@ class ImageFrame:
     def centre_delta_a(self, native: CenterKind) -> np.ndarray:
         """``native_centre - cets_centre`` in Å per axis."""
         return np.array(
-            [(centre_index(int(n), native) - o) * s for n, o, s in zip(self.size_px, self.origin_index, self.spacing_a)],
+            [
+                (centre_index(int(n), native) - o) * s
+                for n, o, s in zip(self.size_px, self.origin_index, self.spacing_a)
+            ],
             dtype=np.float64,
         )
 
@@ -176,26 +179,38 @@ def image_frame(image) -> ImageFrame:
         for ax in cs.axes:
             atype = str(getattr(ax.axis_type, "value", ax.axis_type))
             if atype != want_type:
-                raise ValueError(f"{what}: axis {ax.name!r} of {name!r} has axis_type {atype!r}, expected {want_type!r}")
+                raise ValueError(
+                    f"{what}: axis {ax.name!r} of {name!r} has axis_type {atype!r}, expected {want_type!r}",
+                )
             if name == PHYSICAL_CS and str(getattr(ax.axis_unit, "value", ax.axis_unit)) != UNIT_ANGSTROM:
                 raise ValueError(f"{what}: physical axis {ax.name!r} unit is not angstrom")
 
-    chains = [t for t in (getattr(image, "coordinate_transformations", None) or []) if getattr(t, "name", None) == ARRAY_TO_PHYSICAL]
+    chains = [
+        t
+        for t in (getattr(image, "coordinate_transformations", None) or [])
+        if getattr(t, "name", None) == ARRAY_TO_PHYSICAL
+    ]
     if len(chains) != 1:
         raise ValueError(f"{what}: expected exactly one transform named {ARRAY_TO_PHYSICAL!r}, found {len(chains)}")
     chain = chains[0]
     if chain.input != ARRAY_CS or chain.output != PHYSICAL_CS:
-        raise ValueError(f"{what}: {ARRAY_TO_PHYSICAL!r} must map {ARRAY_CS!r} -> {PHYSICAL_CS!r}, got {chain.input!r} -> {chain.output!r}")
+        raise ValueError(
+            f"{what}: {ARRAY_TO_PHYSICAL!r} must map {ARRAY_CS!r} -> {PHYSICAL_CS!r}, got {chain.input!r} -> {chain.output!r}",
+        )
 
     kind = _ttype(chain)
     if kind == "scale":
         scale = _broadcast(list(chain.scale), ndim, what, "scale")
         return ImageFrame(size_px=size, spacing_a=tuple(scale), origin_index=tuple([0.0] * ndim))
     if kind != "sequence":
-        raise ValueError(f"{what}: {ARRAY_TO_PHYSICAL!r} is a {kind!r}; the profile allows a Scale or Sequence[Translation, Scale]")
+        raise ValueError(
+            f"{what}: {ARRAY_TO_PHYSICAL!r} is a {kind!r}; the profile allows a Scale or Sequence[Translation, Scale]",
+        )
     steps = list(chain.sequence or [])
     if len(steps) != 2 or _ttype(steps[0]) != "translation" or _ttype(steps[1]) != "scale":
-        raise ValueError(f"{what}: {ARRAY_TO_PHYSICAL!r} must be Sequence[Translation, Scale], got {[_ttype(s) for s in steps]}")
+        raise ValueError(
+            f"{what}: {ARRAY_TO_PHYSICAL!r} must be Sequence[Translation, Scale], got {[_ttype(s) for s in steps]}",
+        )
     trans = _broadcast(list(steps[0].translation), ndim, what, "translation")
     scale = _broadcast(list(steps[1].scale), ndim, what, "scale")
     if any(v <= 0 for v in scale):

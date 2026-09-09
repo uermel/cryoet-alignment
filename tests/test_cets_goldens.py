@@ -15,7 +15,6 @@ torch = pytest.importorskip("torch")
 arewarpion = pytest.importorskip("arewarpion")
 
 from arewarpion.models.aretomo_ts import AretomoTsModel  # noqa: E402
-
 from cryoet_alignment.io.aretomo3 import AreTomo3ALN  # noqa: E402
 from cryoet_alignment.io.aretomo3.aln import GlobalAlignmentInfo  # noqa: E402
 from cryoet_alignment.io.cets.alignment import (  # noqa: E402
@@ -49,7 +48,9 @@ def _synthetic_aln(n_tilts: int, n_raw: int) -> AreTomo3ALN:
         )
     from cryoet_alignment.io.aretomo3.aln import DarkFrameInfo
 
-    darks = [DarkFrameInfo(section_idx=z, val2=z + 1, angle=0.0) for z in range(n_raw) if (z + 1) not in set(secs.tolist())]
+    darks = [
+        DarkFrameInfo(section_idx=z, val2=z + 1, angle=0.0) for z in range(n_raw) if (z + 1) not in set(secs.tolist())
+    ]
     return AreTomo3ALN(RawSize=(0, 0, n_raw), NumPatches=0, DarkFrames=darks, GlobalAlignments=rows)
 
 
@@ -85,8 +86,14 @@ def test_g1_aretomo3_chain_matches_torch_model(image_n, vol):
     ref_xy, _ = model.project_volume_global(torch.tensor(pts, dtype=torch.float64))
     ref_xy = ref_xy.numpy()
 
-    ts = tilt_series_entity(tilt_series_id="TS", path=None, width=image_n[0], height=image_n[1], pixel_size_a=s,
-                            nominal_angles=[0.0] * n_raw)
+    ts = tilt_series_entity(
+        tilt_series_id="TS",
+        path=None,
+        width=image_n[0],
+        height=image_n[1],
+        pixel_size_a=s,
+        nominal_angles=[0.0] * n_raw,
+    )
     tomo = tomogram_entity(tomogram_id="TS_tomo", path=None, size_px=vol, voxel_size_a=s, tilt_series_id="TS")
     ref = ReferenceVolume.from_tomogram(tomo)
     img = image_frame(ts.images[0])
@@ -98,7 +105,10 @@ def test_g1_aretomo3_chain_matches_torch_model(image_n, vol):
 
     # negative control: the naive recipe (native shifts copied, no centre deltas)
     naive = cets.model_copy(deep=True)
-    for pa, p in zip(naive.projection_alignments, sorted(hub.per_section_alignment_parameters, key=lambda q: q.z_index)):
+    for pa, p in zip(
+        naive.projection_alignments,
+        sorted(hub.per_section_alignment_parameters, key=lambda q: q.z_index),
+    ):
         pa.sequence[2].translation = [p.x_offset * s, p.y_offset * s]
     naive_err = np.abs(_cets_project(naive, pts, ref, img) - ref_xy).max() / s
     odd = any(n % 2 for n in image_n) or any(n % 2 for n in vol)
@@ -108,8 +118,14 @@ def test_g1_aretomo3_chain_matches_torch_model(image_n, vol):
         assert naive_err < 1e-9
 
     # and back: the hub is reproduced exactly (offsets in px)
-    back = alignment_from_cets(cets, tilt_series=ts, reference=ref, target_frame=FRAME_CONVENTIONS["ARETOMO3"],
-                               native_dimension_a=hub.volume_dimension, format_="ARETOMO3")
+    back = alignment_from_cets(
+        cets,
+        tilt_series=ts,
+        reference=ref,
+        target_frame=FRAME_CONVENTIONS["ARETOMO3"],
+        native_dimension_a=hub.volume_dimension,
+        format_="ARETOMO3",
+    )
     for a, b in zip(hub.per_section_alignment_parameters, back.per_section_alignment_parameters):
         assert a.z_index == b.z_index
         assert abs(a.x_offset - b.x_offset) < 1e-9 and abs(a.y_offset - b.y_offset) < 1e-9
@@ -135,10 +151,21 @@ def test_g8_real_aln_chain_matches_torch_model():
     rng = np.random.default_rng(3)
     pts = rng.uniform(0.1, 0.9, size=(200, 3)) * np.array(vol) * s
     ref_xy, _ = model.project_volume_global(torch.tensor(pts, dtype=torch.float64))
-    ts = tilt_series_entity(tilt_series_id="TS", path=None, width=vol[0], height=vol[1], pixel_size_a=s,
-                            nominal_angles=[0.0] * aln.n_raw)
-    tomo = tomogram_entity(tomogram_id="TS_tomo", path=None, size_px=(1024, 1024, 299), voxel_size_a=vol[0] * s / 1024,
-                           tilt_series_id="TS")
+    ts = tilt_series_entity(
+        tilt_series_id="TS",
+        path=None,
+        width=vol[0],
+        height=vol[1],
+        pixel_size_a=s,
+        nominal_angles=[0.0] * aln.n_raw,
+    )
+    tomo = tomogram_entity(
+        tomogram_id="TS_tomo",
+        path=None,
+        size_px=(1024, 1024, 299),
+        voxel_size_a=vol[0] * s / 1024,
+        tilt_series_id="TS",
+    )
     ref = ReferenceVolume.from_tomogram(tomo)
     img = image_frame(ts.images[0])
     cets = alignment_to_cets(hub, tilt_series_id="TS", alignment_name="aretomo3", image=img, reference=ref)

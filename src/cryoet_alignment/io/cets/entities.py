@@ -128,7 +128,9 @@ def region_entity(
     collection = None
     if movie_stack_series or gain_file or defect_file:
         collection = m.MovieStackCollection(
-            movie_stacks=list(movie_stack_series), gain_file=gain_file, defect_file=defect_file,
+            movie_stacks=list(movie_stack_series),
+            gain_file=gain_file,
+            defect_file=defect_file,
         )
     return m.Region(
         id=region_id,

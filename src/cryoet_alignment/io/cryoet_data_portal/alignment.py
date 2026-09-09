@@ -95,7 +95,11 @@ def _volume_dimension_a(
     if vol_size_px is not None:
         if pixel_size_a is None:
             raise ValueError("vol_size_px is in pixels: pass pixel_size_a (Å/px) to express the volume in Å")
-        return {"x": vol_size_px[0] * pixel_size_a, "y": vol_size_px[1] * pixel_size_a, "z": vol_size_px[2] * pixel_size_a}
+        return {
+            "x": vol_size_px[0] * pixel_size_a,
+            "y": vol_size_px[1] * pixel_size_a,
+            "z": vol_size_px[2] * pixel_size_a,
+        }
     if fallback_a is not None:
         return {"x": float(fallback_a[0]), "y": float(fallback_a[1]), "z": float(fallback_a[2])}
     return {"x": 0.0, "y": 0.0, "z": 0.0}
@@ -373,10 +377,17 @@ class Alignment(FileIOBase):
     ):
         """Load a Warp XML and convert it (see ``WarpAlignment.from_file`` for the dimension overrides)."""
         warp = WarpAlignment.from_file(
-            xml_path, pixel_size_a=pixel_size_a, image_dims_a=image_dims_a, volume_dims_a=volume_dims_a,
+            xml_path,
+            pixel_size_a=pixel_size_a,
+            image_dims_a=image_dims_a,
+            volume_dims_a=volume_dims_a,
         )
         return cls.from_warp(
-            warp=warp, vol=vol, vol_size_px=vol_size_px, pixel_size_a=pixel_size_a, allow_varying_grids=allow_varying_grids,
+            warp=warp,
+            vol=vol,
+            vol_size_px=vol_size_px,
+            pixel_size_a=pixel_size_a,
+            allow_varying_grids=allow_varying_grids,
         )
 
     # ------------------------------------------------------------------ RELION

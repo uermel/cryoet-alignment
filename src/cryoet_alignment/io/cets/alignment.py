@@ -89,7 +89,11 @@ def reconcile_volume(native_dimension_a: Dict[str, float], reference: ReferenceV
         )
 
 
-def _native_volume_centre_a(native_dimension_a: Dict[str, float], frame: FrameConvention, pixel_size_a: float) -> np.ndarray:
+def _native_volume_centre_a(
+    native_dimension_a: Dict[str, float],
+    frame: FrameConvention,
+    pixel_size_a: float,
+) -> np.ndarray:
     v = np.array([native_dimension_a["x"], native_dimension_a["y"], native_dimension_a["z"]], dtype=np.float64)
     if frame.volume_center == "half":
         return v / 2.0
@@ -190,7 +194,9 @@ def fold_projection(pa) -> Tuple[np.ndarray, np.ndarray]:
             "not a cets-rigid/0.1 document (use an adapter for other encodings)",
         )
     if pa.input != PHYSICAL_CS or pa.output != PHYSICAL_CS:
-        raise ValueError(f"projection alignment {pa.id!r} must map physical -> physical, got {pa.input!r} -> {pa.output!r}")
+        raise ValueError(
+            f"projection alignment {pa.id!r} must map physical -> physical, got {pa.input!r} -> {pa.output!r}",
+        )
     r = np.eye(3)
     v = np.zeros(3)
     steps = list(pa.sequence or [])
@@ -244,7 +250,9 @@ def alignment_from_cets(
     params: List[PerSectionAlignmentParameters] = []
     for pa in cets_alignment.projection_alignments or []:
         if pa.tilt_image_id is None or pa.tilt_image_id not in images:
-            raise ValueError(f"projection alignment {pa.id!r}: tilt_image_id {pa.tilt_image_id!r} not in tilt series {tilt_series.id!r}")
+            raise ValueError(
+                f"projection alignment {pa.id!r}: tilt_image_id {pa.tilt_image_id!r} not in tilt series {tilt_series.id!r}",
+            )
         im = images[pa.tilt_image_id]
         if im.section is None:
             raise ValueError(f"tilt image {im.id!r} has no section index")
@@ -294,11 +302,12 @@ def project_points(cets_alignment, points_tomo_a: np.ndarray) -> Dict[str, np.nd
 def select_alignment(region, selector: Optional[object] = None, tilt_series_id: Optional[str] = None):
     """Pick one ``Alignment`` of a region: by index, by projection-id name prefix, or automatically when
     exactly one candidate exists; ambiguity is an error, never a guess."""
-    candidates = [
-        a for a in (region.alignments or []) if tilt_series_id is None or a.tilt_series_id == tilt_series_id
-    ]
+    candidates = [a for a in (region.alignments or []) if tilt_series_id is None or a.tilt_series_id == tilt_series_id]
     if not candidates:
-        raise ValueError(f"region {region.id!r} has no alignment" + (f" for tilt series {tilt_series_id!r}" if tilt_series_id else ""))
+        raise ValueError(
+            f"region {region.id!r} has no alignment"
+            + (f" for tilt series {tilt_series_id!r}" if tilt_series_id else ""),
+        )
     if selector is None:
         if len(candidates) == 1:
             return candidates[0]
@@ -308,7 +317,9 @@ def select_alignment(region, selector: Optional[object] = None, tilt_series_id: 
         return candidates[selector]
     matches = [a for a in candidates if alignment_name_of(a) == selector]
     if len(matches) != 1:
-        raise ValueError(f"alignment {selector!r} matches {len(matches)} of {[alignment_name_of(a) for a in candidates]}")
+        raise ValueError(
+            f"alignment {selector!r} matches {len(matches)} of {[alignment_name_of(a) for a in candidates]}",
+        )
     return matches[0]
 
 
@@ -321,7 +332,7 @@ def alignment_name_of(cets_alignment) -> Optional[str]:
     prefix = f"{cets_alignment.tilt_series_id}_"
     if not pid.startswith(prefix) or "_align_" not in pid:
         return None
-    return pid[len(prefix):].rsplit("_align_", 1)[0]
+    return pid[len(prefix) :].rsplit("_align_", 1)[0]
 
 
 def tomogram_ids_for(region, cets_alignment, companion=None) -> List[str]:
