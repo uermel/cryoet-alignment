@@ -94,7 +94,10 @@ def test_point_entities_roundtrip_and_frames(tmp_path, size):
     pts = rng.uniform(-1500, 1500, (25, 3))
     mats, _ = _random_rotations(25, seed=2)
     oriented = point_set_entity(
-        annotation_id=annotation_id(tomo.id, "picks"), tomogram_id=tomo.id, points_a=pts, matrices=mats,
+        annotation_id=annotation_id(tomo.id, "picks"),
+        tomogram_id=tomo.id,
+        points_a=pts,
+        matrices=mats,
     )
     plain = point_set_entity(annotation_id=annotation_id(tomo.id, "plain"), tomogram_id=tomo.id, points_a=pts)
     mask = mask_entity(
@@ -131,7 +134,10 @@ def test_annotation_to_tomogram_chains_fold_and_others_are_refused():
     tomo = _scene()
     pts = np.array([[10.0, 20.0, 30.0], [-5.0, 0.0, 2.5]])
     ann = point_set_entity(
-        annotation_id="a", tomogram_id=tomo.id, points_a=pts, matrices=zyz_to_matrices([[10, 20, 30], [0, 90, 0]]),
+        annotation_id="a",
+        tomogram_id=tomo.id,
+        points_a=pts,
+        matrices=zyz_to_matrices([[10, 20, 30], [0, 90, 0]]),
     )
     rot = rot_z(30.0)
     ann.coordinate_transformations = [
@@ -215,7 +221,12 @@ def test_star_write_read_identity(tmp_path, flavour):
     rows = StarRows(series=series, positions_corner_a=pos, matrices=mats, extra={"rlnRandomSubset": [1, 2] * 10})
     extent = np.array([6307.84, 6307.84, 3080.0])
     p = write_particle_star(
-        tmp_path / f"{flavour}.star", flavour, rows, coords_angpix=4.99, extent_a=extent, voltage_kv=300.0,
+        tmp_path / f"{flavour}.star",
+        flavour,
+        rows,
+        coords_angpix=4.99,
+        extent_a=extent,
+        voltage_kv=300.0,
     )
     # auto-detection: warp and m share their column set (only the pixel-size chain differs); relion5 is distinct
     auto = read_particle_star(p, "auto", coords_angpix=4.99 if flavour == "warp" else None)
@@ -270,7 +281,10 @@ def test_warp_star_origin_variants_and_explicit_pixel(tmp_path):
     assert np.allclose(t.positions_corner_a, coords * 2.0 - np.array([[1.0, 0.0, 0.25], [-2.0, 0.5, 0.0]]) * 4.0)
     # (b) rlnOriginXAngst with rlnImagePixelSize per row (Warp divides per row, then scales by coords_angpix)
     df2 = df.drop(columns=["rlnOriginX", "rlnOriginY", "rlnOriginZ"]).assign(
-        rlnOriginXAngst=[3.0, 6.0], rlnOriginYAngst=[0.0, 0.0], rlnOriginZAngst=[1.5, 0.0], rlnImagePixelSize=[1.5, 3.0],
+        rlnOriginXAngst=[3.0, 6.0],
+        rlnOriginYAngst=[0.0, 0.0],
+        rlnOriginZAngst=[1.5, 0.0],
+        rlnImagePixelSize=[1.5, 3.0],
     )
     starfile.write(df2, tmp_path / "b.star")
     t = read_particle_star(tmp_path / "b.star", "warp", coords_angpix=2.0)

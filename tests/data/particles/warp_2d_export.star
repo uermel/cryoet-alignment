@@ -52,5 +52,3 @@ _rlnTomoVisibleFrames #15
 24aug01b_Position_1_5.tomostar	3	1243.742000	1413.912000	167.416000	112.500000	99.594000	75.000000	24aug01b_Position_1_5/3	9	../24aug01b/warp_tiltseries/particleseries/24aug01b_Position_1_5/24aug01b_Position_1_5_4.00A_000003.mrcs	0.000000	0.000000	0.000000	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 24aug01b_Position_1_5.tomostar	4	1068.568000	1316.315000	169.915000	-56.250000	48.190000	225.000000	24aug01b_Position_1_5/4	9	../24aug01b/warp_tiltseries/particleseries/24aug01b_Position_1_5/24aug01b_Position_1_5_4.00A_000004.mrcs	0.000000	0.000000	0.000000	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 24aug01b_Position_1_5.tomostar	5	600.600000	1446.445000	169.915000	45.000000	35.659000	135.000000	24aug01b_Position_1_5/5	9	../24aug01b/warp_tiltseries/particleseries/24aug01b_Position_1_5/24aug01b_Position_1_5_4.00A_000005.mrcs	0.000000	0.000000	0.000000	[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-
-

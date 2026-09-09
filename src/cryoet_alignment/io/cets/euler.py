@@ -45,11 +45,15 @@ def zyz_to_matrix(rot_deg: float, tilt_deg: float, psi_deg: float) -> np.ndarray
 def matrix_to_zyz(a: np.ndarray) -> Tuple[float, float, float]:
     """Inverse of :func:`zyz_to_matrix` (Warp ``EulerFromMatrix``); returns ``(rot, tilt, psi)`` in degrees.
 
-    The result is verified by rebuilding the matrix (1e-9); at gimbal lock (``tilt`` = 0 or 180°) ``rot`` is 0
-    and ``psi`` carries the in-plane rotation, exactly as Warp does.
+    The input must be a proper rotation to 1e-6 (``check_rotation``); it is projected onto the nearest exact
+    rotation (polar factor) before the decomposition, so matrices stored with float32 / JSON precision (portal
+    ndjson) decompose cleanly. The result is verified by rebuilding that rotation (1e-9); at gimbal lock (``tilt``
+    = 0 or 180°) ``rot`` is 0 and ``psi`` carries the in-plane rotation, exactly as Warp does.
     """
     a = np.asarray(a, dtype=np.float64)
     check_rotation(a, "particle rotation")
+    u, _, vt = np.linalg.svd(a)
+    a = u @ vt
     m11, m13, m21, m23, m31, m32, m33 = a[0, 0], a[0, 2], a[1, 0], a[1, 2], a[2, 0], a[2, 1], a[2, 2]
     abs_sb = math.sqrt(m13 * m13 + m23 * m23)
     if abs_sb > _EPS:
