@@ -1,4 +1,4 @@
-"""G2 / G12: the Warp side of the codec against arewarpion's warpylib-backed ``WarpTiltSeriesModel``.
+"""The Warp side of the codec against arewarpion's warpylib-backed ``WarpTiltSeriesModel``.
 
 A rigid XML written by ``WarpAlignment`` is patched with (a) a single-node ``GridMovementX = 7 Å``,
 (b) a constant ``GridVolumeWarp = (3, -2, 5) Å`` and (c) a ``1×1×T`` per-tilt ``GridMovementY`` — all of
@@ -71,7 +71,7 @@ def _patch_grids(xml: str, n: int, movement_y: list) -> str:
 
 
 @pytest.mark.parametrize("xrot,level_y", [(0.0, 0.0), (0.7, 1.5)])
-def test_g2_constant_grids_are_rigid_and_folded(tmp_path: Path, xrot, level_y):
+def test_constant_grids_are_rigid_and_folded(tmp_path: Path, xrot, level_y):
     s = 1.7
     n_rows, dark = 8, 3
     hub = _hub(n_rows, dark, xrot)
@@ -159,7 +159,7 @@ def test_g2_constant_grids_are_rigid_and_folded(tmp_path: Path, xrot, level_y):
     assert naive_worst > 5.0
 
 
-def test_g3_x_rotation_representability():
+def test_x_rotation_representability():
     hub = _hub(5, -1, 0.0)
     hub.per_section_alignment_parameters[2].volume_x_rotation = 0.2
     with pytest.raises(ValueError, match="volume_x_rotation varies"):

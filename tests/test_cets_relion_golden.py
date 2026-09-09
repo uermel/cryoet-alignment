@@ -1,4 +1,4 @@
-"""C6: for a RELION-origin hub (``floor`` centres) the CETS chain equals ``RelionTomogramModel`` exactly —
+"""For a RELION-origin hub (``floor`` centres) the CETS chain equals ``RelionTomogramModel`` exactly —
 no centre deltas, odd sizes included — and the decomposed Eulers are RELION's."""
 
 import numpy as np
@@ -17,7 +17,7 @@ from cryoet_alignment.io.relion import RelionAlignment, RelionAlignmentEntry  # 
 
 
 @pytest.mark.parametrize("image_n,vol", [((4096, 4096), (4096, 4096, 1200)), ((4095, 4097), (4095, 4097, 1201))])
-def test_c6_relion_chain_matches_matrix_model(image_n, vol):
+def test_relion_chain_matches_matrix_model(image_n, vol):
     s = 1.9
     rng = np.random.default_rng(2)
     entries = [

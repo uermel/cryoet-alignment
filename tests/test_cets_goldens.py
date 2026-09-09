@@ -1,8 +1,8 @@
 """Numerical gates of the cets-rigid/0.1 codec against arewarpion's pinned torch projection models.
 
-Skipped when arewarpion (torch) is not importable. G1: odd image/volume sizes — the CETS chain evaluated
+Skipped when arewarpion (torch) is not importable. Odd image/volume sizes — the CETS chain evaluated
 purely from the document must reproduce ``AretomoTsModel.project_volume_global`` to 1e-9 px, and the naive
-"copy the native shifts" recipe must NOT (negative control, ~1.6 px on odd sizes). G8: the real
+"copy the native shifts" recipe must NOT (negative control, ~1.6 px on odd sizes). Then the real
 24jul16a ``.aln`` and the RELION matrix model.
 """
 
@@ -66,7 +66,7 @@ def _cets_project(cets_alignment, points_a_corner, ref: ReferenceVolume, img: Im
 
 
 @pytest.mark.parametrize("image_n,vol", [((4096, 4096), (4096, 4096, 1196)), ((4095, 4097), (4095, 4097, 2001))])
-def test_g1_aretomo3_chain_matches_torch_model(image_n, vol):
+def test_odd_sizes_aretomo3_chain_matches_torch_model(image_n, vol):
     s = 1.54
     n_raw, n_tilts = 9, 7
     aln = _synthetic_aln(n_tilts, n_raw)
@@ -134,7 +134,7 @@ def test_g1_aretomo3_chain_matches_torch_model(image_n, vol):
 
 
 @pytest.mark.skipif(not TESTDATA.exists(), reason="real AreTomo3 run not available")
-def test_g8_real_aln_chain_matches_torch_model():
+def test_real_aln_chain_matches_torch_model():
     aln_path = sorted((TESTDATA / "outB").glob("*.aln"))[0]
     aln = AreTomo3ALN.from_file(aln_path)
     s = 1.54
