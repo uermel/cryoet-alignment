@@ -1,11 +1,11 @@
 import os
 from typing import Union
 
-from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF
+from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF, AreTomo3TLT
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
 from cryoet_alignment.io.relion import RelionAlignment
-from cryoet_alignment.io.warp import WarpAlignment
+from cryoet_alignment.io.warp import WarpAlignment, WarpSettings, WarpTomostar
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
 
@@ -84,6 +84,16 @@ def write_aretomo3_ctf(ctf: AreTomo3CTF, ctf_path: PATH_TYPE) -> None:
     ctf.to_file(ctf_path)
 
 
+def write_aretomo3_tlt(tlt: AreTomo3TLT, tlt_path: PATH_TYPE) -> None:
+    """Write per-tilt angles / acquisition order / dose in AreTomo3 _TLT.txt format.
+
+    Args:
+        tlt: The tilt-file object to write.
+        tlt_path: The path to write the _TLT.txt file to.
+    """
+    tlt.to_file(tlt_path)
+
+
 def write_warp(warp: WarpAlignment, xml_path: PATH_TYPE) -> None:
     """Write a Warp alignment to a tilt-series XML metadata file.
 
@@ -92,6 +102,26 @@ def write_warp(warp: WarpAlignment, xml_path: PATH_TYPE) -> None:
         xml_path: The path to write the alignment file to.
     """
     warp.to_file(xml_path)
+
+
+def write_warp_tomostar(tomostar: WarpTomostar, tomostar_path: PATH_TYPE) -> None:
+    """Write a Warp .tomostar tilt-series descriptor.
+
+    Args:
+        tomostar: The tomostar object to write.
+        tomostar_path: The path to write the .tomostar file to.
+    """
+    tomostar.to_file(tomostar_path)
+
+
+def write_warp_settings(settings: WarpSettings, settings_path: PATH_TYPE) -> None:
+    """Write a Warp .settings project file.
+
+    Args:
+        settings: The settings object to write.
+        settings_path: The path to write the .settings file to.
+    """
+    settings.to_file(settings_path)
 
 
 def write_relion(relion: RelionAlignment, tomograms_star: PATH_TYPE) -> None:
@@ -109,8 +139,11 @@ WRITER = {
     "imod": write_imod_basename,
     "aretomo3": write_aretomo3,
     "aretomo3_ctf": write_aretomo3_ctf,
+    "aretomo3_tlt": write_aretomo3_tlt,
     "cdp": write_cdp,
     "warp": write_warp,
+    "warp_tomostar": write_warp_tomostar,
+    "warp_settings": write_warp_settings,
     "relion": write_relion,
 }
 
@@ -118,14 +151,27 @@ INFER_WRITER = {
     Alignment: "cdp",
     AreTomo3ALN: "aretomo3",
     AreTomo3CTF: "aretomo3_ctf",
+    AreTomo3TLT: "aretomo3_tlt",
     ImodAlignment: "imod",
     WarpAlignment: "warp",
+    WarpTomostar: "warp_tomostar",
+    WarpSettings: "warp_settings",
     RelionAlignment: "relion",
 }
 
 
 def write(
-    alignment: Union[Alignment, AreTomo3ALN, AreTomo3CTF, ImodAlignment, RelionAlignment, WarpAlignment],
+    alignment: Union[
+        Alignment,
+        AreTomo3ALN,
+        AreTomo3CTF,
+        AreTomo3TLT,
+        ImodAlignment,
+        RelionAlignment,
+        WarpAlignment,
+        WarpTomostar,
+        WarpSettings,
+    ],
     path: PATH_TYPE,
     writer: str = None,
 ) -> None:
@@ -135,8 +181,8 @@ def write(
         alignment: The alignment object to write.
         path: The path to write the alignment file to.
         writer: The writer to use for the alignment file (one of "imod", "aretomo3",
-        "aretomo3_ctf", "cdp", "relion", or "warp"). If None, the writer will be
-        inferred from the alignment object type.
+        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", "warp", "warp_tomostar" or
+        "warp_settings"). If None, the writer will be inferred from the alignment object type.
     """
     if writer is None:
         writer = INFER_WRITER[type(alignment)]
