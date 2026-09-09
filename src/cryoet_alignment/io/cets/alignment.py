@@ -191,7 +191,7 @@ def fold_projection(pa) -> Tuple[np.ndarray, np.ndarray]:
     if name != TOMOGRAM_TO_PROJECTION:
         raise ValueError(
             f"projection alignment {getattr(pa, 'id', '?')!r} is named {name!r}, not {TOMOGRAM_TO_PROJECTION!r}: "
-            "not a cets-rigid/0.1 document (use an adapter for other encodings)",
+            "not a cets-rigid document (use an adapter for other encodings)",
         )
     if pa.input != PHYSICAL_CS or pa.output != PHYSICAL_CS:
         raise ValueError(

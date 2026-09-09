@@ -1,4 +1,4 @@
-"""Numerical gates of the cets-rigid/0.1 codec against arewarpion's pinned torch projection models.
+"""Numerical gates of the cets-rigid/0.2 codec against arewarpion's pinned torch projection models.
 
 Skipped when arewarpion (torch) is not importable. Odd image/volume sizes — the CETS chain evaluated
 purely from the document must reproduce ``AretomoTsModel.project_volume_global`` to 1e-9 px, and the naive
@@ -172,3 +172,19 @@ def test_real_aln_chain_matches_torch_model():
     got = _cets_project(cets, pts, ref, img)
     err_px = np.abs(got - ref_xy.numpy()).max() / s
     assert err_px < 1e-3, f"{err_px:.3e} px"
+
+
+def test_euler_port_equals_arewarpion_angles_to_matrix3():
+    """The ZYZ pair of ``io.cets.euler`` equals arewarpion's literal port of RELION's ``Euler::anglesToMatrix3``."""
+    from arewarpion.models.relion_ts import angles_to_matrix3
+    from cryoet_alignment.io.cets.euler import zyz_to_matrices
+
+    rng = np.random.default_rng(7)
+    e = np.column_stack([rng.uniform(-180, 180, 300), rng.uniform(0, 180, 300), rng.uniform(-180, 180, 300)])
+    ours = zyz_to_matrices(e)
+    theirs = angles_to_matrix3(
+        torch.tensor(e[:, 0], dtype=torch.float64),
+        torch.tensor(e[:, 1], dtype=torch.float64),
+        torch.tensor(e[:, 2], dtype=torch.float64),
+    ).numpy()
+    assert np.abs(ours - theirs).max() < 1e-12

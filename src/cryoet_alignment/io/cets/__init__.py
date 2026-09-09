@@ -1,4 +1,4 @@
-"""CETS (TomoBabel cryo-ET standard) rigid tilt-series profile ``cets-rigid/0.1``.
+"""CETS (TomoBabel cryo-ET standard) rigid tilt-series profile ``cets-rigid/0.2``.
 
 The ``cets_data_model`` package (git-only, pinned commit in ``docs/cets.md``) is imported lazily so the
 rest of cryoet-alignment does not need it. Every public function here raises a clear ``ImportError``
