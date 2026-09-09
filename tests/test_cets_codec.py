@@ -1,4 +1,4 @@
-"""Unit tests of the cets-rigid/0.1 codec that need no torch: round-trip identity, layouts and folding, frames,
+"""Unit tests of the cets-rigid/0.2 codec that need no torch: round-trip identity, layouts and folding, frames,
 ids and selection, CTF nulls and units, the cets-imod adapter, the companion manifest, the config resolver."""
 
 import json
@@ -429,7 +429,7 @@ def test_document_dump_load(tmp_path):
         back.regions[0].alignments[0].projection_alignments[0].sequence[2].translation
         == cets.projection_alignments[0].sequence[2].translation
     )
-    assert PROFILE_VERSION == "cets-rigid/0.1"
+    assert PROFILE_VERSION == "cets-rigid/0.2"
 
 
 # ------------------------------------------------------------------ resolver / config

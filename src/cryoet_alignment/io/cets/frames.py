@@ -1,4 +1,4 @@
-"""Coordinate frames of the ``cets-rigid/0.1`` profile: the ``array``/``physical`` coordinate systems, the
+"""Coordinate frames of the ``cets-rigid/0.2`` profile: the ``array``/``physical`` coordinate systems, the
 ``array_to_physical`` transform, and the centre conventions that relate native tool frames to CETS.
 
 CETS (issue #1 / PR #34): ``array`` = integer indices, corner origin; ``physical`` = Å with the origin at the

@@ -1,11 +1,13 @@
-"""Names and versions that define the ``cets-rigid/0.1`` interoperability profile.
+"""Names and versions that define the ``cets-rigid/0.2`` interoperability profile (0.1 + annotations).
 
 The profile is the exact subset of CETS documents this codec reads and writes; anything else is rejected
 with the first mismatching element named (or routed through an explicit adapter). See ``docs/cets.md``.
 """
 
-PROFILE_VERSION = "cets-rigid/0.1"
-COMPANION_VERSION = "cets-rigid-companion/0.1"
+PROFILE_VERSION = "cets-rigid/0.2"
+COMPANION_VERSION = "cets-rigid-companion/0.2"
+#: Companion schemas this codec still reads (0.1 = no annotations section).
+COMPANION_VERSIONS_READABLE = ("cets-rigid-companion/0.1", COMPANION_VERSION)
 
 #: Pinned cets-data-models commit (PR #34 head; contains main, sequence cardinality 3).
 CETS_DATA_MODEL_COMMIT = "b415e952d309ac1ec0dee01a3a5db639cb08bba5"
