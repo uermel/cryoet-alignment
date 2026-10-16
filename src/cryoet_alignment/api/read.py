@@ -5,6 +5,7 @@ from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF, AreTomo3TLT
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
 from cryoet_alignment.io.relion import RelionAlignment
+from cryoet_alignment.io.serialem import SerialEMMdoc
 from cryoet_alignment.io.warp import WarpAlignment, WarpSettings, WarpTomostar
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
@@ -160,6 +161,18 @@ def read_relion(
     return RelionAlignment.from_file(tomograms_star, tomo_name=tomo_name, image_size_px=image_size_px)
 
 
+def read_serialem_mdoc(mdoc_path: PATH_TYPE) -> SerialEMMdoc:
+    """Read a SerialEM tilt-series .mdoc file.
+
+    Args:
+        mdoc_path: The path to the .mdoc file.
+
+    Returns:
+        SerialEMMdoc: The mdoc object.
+    """
+    return SerialEMMdoc.from_file(mdoc_path)
+
+
 READER = {
     "imod": read_imod_basename,
     "aretomo3": read_aretomo3,
@@ -170,6 +183,7 @@ READER = {
     "warp_tomostar": read_warp_tomostar,
     "warp_settings": read_warp_settings,
     "relion": read_relion,
+    "serialem_mdoc": read_serialem_mdoc,
 }
 
 # Note: _CTF.txt and _TLT.txt are intentionally NOT auto-inferred — ``.txt`` is too
@@ -184,6 +198,7 @@ INFER_READER = {
     ".star": "relion",
     ".tomostar": "warp_tomostar",
     ".settings": "warp_settings",
+    ".mdoc": "serialem_mdoc",
 }
 
 
@@ -198,6 +213,7 @@ def read(
     Alignment,
     ImodAlignment,
     RelionAlignment,
+    SerialEMMdoc,
     WarpAlignment,
     WarpTomostar,
     WarpSettings,
@@ -207,9 +223,9 @@ def read(
     Args:
         path: The path to the alignment file (or basename for IMOD).
         reader: The reader to use for the alignment file (one of "imod", "aretomo3",
-        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", "warp", "warp_tomostar" or
-        "warp_settings"). If None, the reader will be inferred from the file extension
-        (".aln", ".json", ".star", ".tomostar", ".settings").
+        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", "serialem_mdoc", "warp", "warp_tomostar"
+        or "warp_settings"). If None, the reader will be inferred from the file extension
+        (".aln", ".json", ".star", ".tomostar", ".settings", ".mdoc").
         Note: ``.xml``, _CTF.txt and _TLT.txt are not auto-inferred — pass the reader explicitly.
         **kwargs: Passed through to the selected reader (e.g. ``pixel_size_a``
         for ``reader="warp"``; ``tomo_name``/``image_size_px`` for ``reader="relion"``).
