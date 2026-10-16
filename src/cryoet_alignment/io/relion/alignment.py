@@ -31,8 +31,14 @@ geometric center corrections are applied: RELION's projection uses
 integer-division volume/image centers while AreTomo/Warp center on N/2, so for
 ODD tomogram or image dimensions the two geometries differ by up to 0.5 px —
 use arewarpion for geometrically exact conversion in that case. Local
-deformations, particle trajectories, and CTF columns are out of scope (CTF
-columns are ignored on read and never written).
+deformations and particle trajectories are out of scope.
+
+Per-tilt CTF columns written by RELION's CTFFIND job (``rlnDefocusU``,
+``rlnDefocusV``, ``rlnDefocusAngle``, ``rlnPhaseShift``,
+``rlnCtfMaxResolution``, ``rlnCtfFigureOfMerit``) and the tilt image
+``rlnMicrographName`` are read when present and written back unchanged
+(RELION units: Angstrom, degrees). A column is written only when every entry
+carries a value: RELION reads each label for every row or for none.
 
 Note on relion-4/Warp matrix files: their matrices are often rotation-only
 (zero translation, a centered-coordinate convention). The decomposition
@@ -60,6 +66,17 @@ VERSION_COMMENT = "# version 50001"
 _EULER_LABELS = ("rlnTomoYTilt", "rlnTomoZRot", "rlnTomoXShiftAngst", "rlnTomoYShiftAngst")
 _MATRIX_LABELS = ("rlnTomoProjX", "rlnTomoProjY", "rlnTomoProjZ", "rlnTomoProjW")
 
+#: Optional per-tilt columns: entry field -> RELION label, in the order they are written.
+OPTIONAL_TILT_LABELS = {
+    "micrograph_name": "rlnMicrographName",
+    "defocus_u": "rlnDefocusU",
+    "defocus_v": "rlnDefocusV",
+    "defocus_angle": "rlnDefocusAngle",
+    "phase_shift": "rlnPhaseShift",
+    "ctf_max_resolution": "rlnCtfMaxResolution",
+    "ctf_figure_of_merit": "rlnCtfFigureOfMerit",
+}
+
 
 class RelionAlignmentEntry(BaseModel):
     """Per-tilt global alignment in RELION convention.
@@ -75,6 +92,13 @@ class RelionAlignmentEntry(BaseModel):
         x_shift_angst: rlnTomoXShiftAngst in Angstrom.
         y_shift_angst: rlnTomoYShiftAngst in Angstrom.
         pre_exposure: rlnMicrographPreExposure in e/A^2 (0 when absent).
+        micrograph_name: rlnMicrographName, the tilt image; None when absent.
+        defocus_u: rlnDefocusU in Angstrom; None when absent.
+        defocus_v: rlnDefocusV in Angstrom; None when absent.
+        defocus_angle: rlnDefocusAngle in degrees; None when absent.
+        phase_shift: rlnPhaseShift in degrees; None when absent.
+        ctf_max_resolution: rlnCtfMaxResolution in Angstrom; None when absent.
+        ctf_figure_of_merit: rlnCtfFigureOfMerit; None when absent.
     """
 
     z_index: int
@@ -85,6 +109,18 @@ class RelionAlignmentEntry(BaseModel):
     x_shift_angst: float
     y_shift_angst: float
     pre_exposure: float = 0.0
+    micrograph_name: Optional[str] = None
+    defocus_u: Optional[float] = None
+    defocus_v: Optional[float] = None
+    defocus_angle: Optional[float] = None
+    phase_shift: Optional[float] = None
+    ctf_max_resolution: Optional[float] = None
+    ctf_figure_of_merit: Optional[float] = None
+
+    @property
+    def has_ctf(self) -> bool:
+        """Whether the entry carries a defocus estimate (U, V and angle)."""
+        return None not in (self.defocus_u, self.defocus_v, self.defocus_angle)
 
 
 def rot_x(deg: float) -> np.ndarray:
@@ -346,6 +382,13 @@ class RelionAlignment(BaseModel):
                 return float(tilt[label].iloc[i])
             return default
 
+        def optional(field, i):
+            label = OPTIONAL_TILT_LABELS[field]
+            if label not in tilt.columns:
+                return None
+            value = tilt[label].iloc[i]
+            return str(value) if field == "micrograph_name" else float(value)
+
         entries = []
         for i in range(len(tilt)):
             if use_matrices:
@@ -373,9 +416,30 @@ class RelionAlignment(BaseModel):
                     x_shift_angst=sx,
                     y_shift_angst=sy,
                     pre_exposure=col("rlnMicrographPreExposure", i, 0.0),
+                    **{field: optional(field, i) for field in OPTIONAL_TILT_LABELS},
                 ),
             )
         return entries
+
+    @property
+    def has_ctf(self) -> bool:
+        """Whether every entry carries a defocus estimate."""
+        return bool(self.entries) and all(e.has_ctf for e in self.entries)
+
+    def _optional_columns(self) -> List[str]:
+        """Optional entry fields every entry carries a value for; raises when only some entries do."""
+        fields = []
+        for field, label in OPTIONAL_TILT_LABELS.items():
+            present = [getattr(e, field) is not None for e in self.entries]
+            if all(present) and present:
+                fields.append(field)
+            elif any(present):
+                missing = [e.z_index for e, p in zip(self.entries, present) if not p]
+                raise ValueError(
+                    f"{label} is set for some tilts but not for z_index {missing} — RELION needs a value "
+                    "for every row; set it for all entries or for none",
+                )
+        return fields
 
     def to_file(self, tomograms_star: PATH_TYPE) -> None:
         """Write the RELION-5 two-file layout: ``tomograms.star`` at the given
@@ -384,8 +448,11 @@ class RelionAlignment(BaseModel):
 
         Requires ``hand``, ``voltage``, ``spherical_aberration`` and
         ``amplitude_contrast`` to be set — RELION refuses tomograms.star files
-        without them, and this writer refuses to invent values.
+        without them, and this writer refuses to invent values. Optional
+        per-tilt columns (CTF, micrograph name) are written when every entry
+        carries them; set for only some entries, they raise ``ValueError``.
         """
+        optional_fields = self._optional_columns()
         missing = [
             n for n in ("hand", "voltage", "spherical_aberration", "amplitude_contrast") if getattr(self, n) is None
         ]
@@ -430,6 +497,7 @@ class RelionAlignment(BaseModel):
                     "rlnTomoXShiftAngst": e.x_shift_angst,
                     "rlnTomoYShiftAngst": e.y_shift_angst,
                     "rlnMicrographPreExposure": e.pre_exposure,
+                    **{OPTIONAL_TILT_LABELS[f]: getattr(e, f) for f in optional_fields},
                 }
                 for e in self.entries
             ],

@@ -123,6 +123,61 @@ def test_two_file_roundtrip(tmp_path):
     _assert_relion_equal(relion, relion_rt)
 
 
+def _with_ctf(relion: RelionAlignment) -> RelionAlignment:
+    entries = [
+        e.model_copy(
+            update={
+                "micrograph_name": f"MotionCorr/job002/TS_1_{e.z_index:03d}.mrc",
+                "defocus_u": 25000.0 + 100.0 * e.z_index,
+                "defocus_v": 24500.0 + 100.0 * e.z_index,
+                "defocus_angle": 35.5,
+                "phase_shift": 0.0,
+                "ctf_max_resolution": 6.25,
+                "ctf_figure_of_merit": 0.12,
+            },
+        )
+        for e in relion.entries
+    ]
+    return relion.model_copy(update={"entries": entries})
+
+
+def test_ctf_columns_roundtrip(tmp_path):
+    """Per-tilt CTF columns and rlnMicrographName are written and read back."""
+    relion = _with_ctf(_make_relion())
+    assert relion.has_ctf
+    star = tmp_path / "tomograms.star"
+    relion.to_file(star)
+
+    text = (tmp_path / "tilt_series" / "TS_1.star").read_text()
+    for label in ("rlnMicrographName", "rlnDefocusU", "rlnDefocusV", "rlnDefocusAngle", "rlnPhaseShift"):
+        assert f"_{label}" in text
+    back = RelionAlignment.from_file(star)
+    for a, b in zip(relion.entries, back.entries):
+        assert b.micrograph_name == a.micrograph_name
+        for field in ("defocus_u", "defocus_v", "defocus_angle", "phase_shift", "ctf_max_resolution"):
+            assert getattr(b, field) == pytest.approx(getattr(a, field), abs=1e-6)
+        assert b.ctf_figure_of_merit == pytest.approx(a.ctf_figure_of_merit, abs=1e-6)
+
+
+def test_ctf_columns_absent_read_as_none(tmp_path):
+    relion = _make_relion()
+    star = tmp_path / "tomograms.star"
+    relion.to_file(star)
+    assert "rlnDefocusU" not in (tmp_path / "tilt_series" / "TS_1.star").read_text()
+    back = RelionAlignment.from_file(star)
+    assert not back.has_ctf
+    assert all(e.defocus_u is None and e.micrograph_name is None for e in back.entries)
+
+
+def test_ctf_columns_must_cover_every_tilt(tmp_path):
+    relion = _with_ctf(_make_relion())
+    entries = list(relion.entries)
+    entries[2] = entries[2].model_copy(update={"defocus_u": None})
+    with pytest.raises(ValueError, match=r"rlnDefocusU is set for some tilts but not for z_index \[2\]"):
+        relion.model_copy(update={"entries": entries}).to_file(tmp_path / "tomograms.star")
+    assert not (tmp_path / "tomograms.star").exists()
+
+
 def test_write_refuses_missing_metadata(tmp_path):
     relion = _make_relion()
     relion.voltage = None
