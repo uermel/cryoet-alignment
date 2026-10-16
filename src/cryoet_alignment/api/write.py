@@ -5,6 +5,7 @@ from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF, AreTomo3TLT
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
 from cryoet_alignment.io.relion import RelionAlignment
+from cryoet_alignment.io.serialem import SerialEMMdoc
 from cryoet_alignment.io.warp import WarpAlignment, WarpSettings, WarpTomostar
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
@@ -135,6 +136,16 @@ def write_relion(relion: RelionAlignment, tomograms_star: PATH_TYPE) -> None:
     relion.to_file(tomograms_star)
 
 
+def write_serialem_mdoc(mdoc: SerialEMMdoc, mdoc_path: PATH_TYPE) -> None:
+    """Write a SerialEM tilt-series .mdoc file.
+
+    Args:
+        mdoc: The mdoc object to write.
+        mdoc_path: The path to write the .mdoc file to.
+    """
+    mdoc.to_file(mdoc_path)
+
+
 WRITER = {
     "imod": write_imod_basename,
     "aretomo3": write_aretomo3,
@@ -145,6 +156,7 @@ WRITER = {
     "warp_tomostar": write_warp_tomostar,
     "warp_settings": write_warp_settings,
     "relion": write_relion,
+    "serialem_mdoc": write_serialem_mdoc,
 }
 
 INFER_WRITER = {
@@ -157,6 +169,7 @@ INFER_WRITER = {
     WarpTomostar: "warp_tomostar",
     WarpSettings: "warp_settings",
     RelionAlignment: "relion",
+    SerialEMMdoc: "serialem_mdoc",
 }
 
 
@@ -168,6 +181,7 @@ def write(
         AreTomo3TLT,
         ImodAlignment,
         RelionAlignment,
+        SerialEMMdoc,
         WarpAlignment,
         WarpTomostar,
         WarpSettings,
@@ -181,8 +195,8 @@ def write(
         alignment: The alignment object to write.
         path: The path to write the alignment file to.
         writer: The writer to use for the alignment file (one of "imod", "aretomo3",
-        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", "warp", "warp_tomostar" or
-        "warp_settings"). If None, the writer will be inferred from the alignment object type.
+        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", "serialem_mdoc", "warp", "warp_tomostar"
+        or "warp_settings"). If None, the writer will be inferred from the alignment object type.
     """
     if writer is None:
         writer = INFER_WRITER[type(alignment)]
