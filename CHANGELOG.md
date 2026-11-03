@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.0](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.2.0...cryoet-alignment-v0.3.0) (2026-11-03)
+
+
+### ✨ Features
+
+* add _TLT.txt tilt-file reader and writer ([#20](https://github.com/uermel/cryoet-alignment/issues/20)) ([74ea65f](https://github.com/uermel/cryoet-alignment/commit/74ea65f7d10be2343d080930a69ac75452c3633f))
+* add .tomostar and .settings project-file models ([#21](https://github.com/uermel/cryoet-alignment/issues/21)) ([2f98bc3](https://github.com/uermel/cryoet-alignment/commit/2f98bc3e1cfb13eeacc30a9ab47bdd2e84b0e029))
+* RELION per-tilt CTF columns and a SerialEM mdoc reader ([#23](https://github.com/uermel/cryoet-alignment/issues/23)) ([9376862](https://github.com/uermel/cryoet-alignment/commit/937686219a0425eea5fd26af1dab47abbc018bd1))
+* rigid CETS profile codec (cets-rigid/0.2) with annotations, and Warp/AreTomo3/hub fixes ([#22](https://github.com/uermel/cryoet-alignment/issues/22)) ([7124a8b](https://github.com/uermel/cryoet-alignment/commit/7124a8b601fcf34c914d316f2709532a64435717))
+
 ## [0.2.0](https://github.com/uermel/cryoet-alignment/compare/cryoet-alignment-v0.1.2...cryoet-alignment-v0.2.0) (2026-09-01)
 
 
