@@ -6,8 +6,9 @@ Supported formats:
 - IMOD
 - AreTomo3
 - Warp (global tilt-series alignment)
-- RELION 5 (global tilt-series alignment)
+- RELION 5 (global tilt-series alignment, per-tilt CTF)
 - cryoet-data-portal
+- SerialEM `.mdoc` (tilt angles, dose, acquisition order)
 
 # Installation
 
@@ -128,15 +129,35 @@ angles and shifts exactly like RELION does it. Only the global alignment is mode
 two-file layout (`tomograms.star` + `tilt_series/<name>.star`). Pass `tomo_name` when the file lists several tomograms,
 and `image_size_px` when the per-tilt table carries matrices instead of Euler columns.
 
+The per-tilt CTF columns of RELION's CTFFIND job (`rlnDefocusU/V/Angle`, `rlnPhaseShift`, `rlnCtfMaxResolution`,
+`rlnCtfFigureOfMerit`) and `rlnMicrographName` are read into the optional entry fields `defocus_u`, `defocus_v`,
+`defocus_angle`, `phase_shift`, `ctf_max_resolution`, `ctf_figure_of_merit` and `micrograph_name`, and written back
+when every entry carries them.
+
 ```python
 from cryoet_alignment import read
 from cryoet_alignment import write
 
 # Read a RELION tomograms.star (one tomogram)
 relion_alignment = read("/path/to/tomograms.star", tomo_name="TS_01")
+relion_alignment.has_ctf, relion_alignment.entries[0].defocus_u
 
 # Write the RELION-5 two-file layout
 write(relion_alignment, "/path/to/out/tomograms.star")
+```
+
+### SerialEM
+SerialEM's tilt-series `.mdoc` (header, `[T = ...]` titles and one `[ZValue = n]` section per image) is read into a
+`SerialEMMdoc`. Known keys (`TiltAngle`, `ExposureDose`, `PriorRecordDose`, `DateTime`, `SubFramePath`, ...) become typed
+fields, all others are kept verbatim and written back unchanged. `acquisition_order()` derives the 0-based order from
+`DateTime` (falling back to the `ZValue` order), and `pre_exposure()` the dose each image received before it was
+acquired: `PriorRecordDose`, else the running sum of `ExposureDose` in acquisition order.
+
+```python
+from cryoet_alignment import read
+
+mdoc = read("/path/to/TS_01.mrc.mdoc")  # .mdoc inference -> reader="serialem_mdoc"
+mdoc.tilt_angles, mdoc.tilt_axis_angle, mdoc.acquisition_order(), mdoc.pre_exposure()
 ```
 
 ### cryoet-data-portal
