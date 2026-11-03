@@ -243,3 +243,15 @@ dim_z, dim_y, dim_x = zarr.open(tilt_series.s3_omezarr_dir)['0'].shape
 imod_ali = cdp_ali.to_imod(ts_size=(dim_x, dim_y, dim_z), ts_spacing=pixel_size)
 write(imod_ali, f"/tmp/test/{tomogram.run.name}")
 ```
+
+## CETS (TomoBabel cryo-ET standard)
+
+`cryoet_alignment.io.cets` implements the rigid interoperability profile `cets-rigid/0.2` (see
+[docs/cets.md](docs/cets.md)): the canonical `Alignment` above encodes to / decodes from CETS
+`ProjectionAlignment` sequences with explicit centre-convention bookkeeping, plus entity builders, CTF unit
+maps, point / oriented-particle / mask annotations bound to a tomogram (`io/cets/annotations.py`) with the
+Warp, M and RELION 5 particle-star flavours (`io/cets/particles_star.py`) and the ZYZ Euler pair transcribed
+from RELION/Warp (`io/cets/euler.py`), a companion manifest for what CETS cannot carry, and the value resolver
+shared by the converter CLIs `cets-aretomo3`, `cets-warpm` and `cets-cdp`. It needs the CETS model package (git only):
+
+    pip install 'cets_data_model @ git+https://github.com/TomoBabel/cets-data-models.git@b415e952d309ac1ec0dee01a3a5db639cb08bba5'
