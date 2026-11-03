@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings>
+	<Param Name="ProcessCTF" Value="True" />
+	<Param Name="ProcessMovement" Value="True" />
+	<Param Name="ProcessPicking" Value="False" />
+	<Import>
+		<Param Name="DataFolder" Value="tomostar" />
+		<Param Name="CorrectDefects" Value="False" />
+		<Param Name="CorrectGain" Value="True" />
+		<Param Name="GainTranspose" Value="False" />
+		<Param Name="GainFlipY" Value="False" />
+		<Param Name="GainFlipX" Value="False" />
+		<Param Name="DefectsPath" Value="" />
+		<Param Name="GainPath" Value="24jul16a_gain.gain" />
+		<Param Name="DosePerAngstromFrame" Value="-3.87" />
+		<Param Name="BinTimes" Value="0" />
+		<Param Name="HeaderlessOffset" Value="0" />
+		<Param Name="HeaderlessType" Value="int8" />
+		<Param Name="HeaderlessHeight" Value="7420" />
+		<Param Name="HeaderlessWidth" Value="7676" />
+		<Param Name="Extension" Value="*.tomostar" />
+		<Param Name="DoRecursiveSearch" Value="False" />
+		<Param Name="ProcessingFolder" Value="warp_tiltseries" />
+		<Param Name="PixelSize" Value="1.54" />
+		<Param Name="EERGroupFrames" Value="-40" />
+	</Import>
+	<CTF>
+		<Param Name="Window" Value="512" />
+		<Param Name="RangeMin" Value="30" />
+		<Param Name="RangeMax" Value="4" />
+		<Param Name="MinQuality" Value="0.8" />
+		<Param Name="Voltage" Value="300" />
+		<Param Name="Cs" Value="2.7" />
+		<Param Name="Cc" Value="2.7" />
+		<Param Name="Amplitude" Value="0.07" />
+		<Param Name="IllAperture" Value="30" />
+		<Param Name="DeltaE" Value="0.7" />
+		<Param Name="Thickness" Value="0" />
+		<Param Name="DoPhase" Value="True" />
+		<Param Name="UseMovieSum" Value="False" />
+		<Param Name="ZMin" Value="0" />
+		<Param Name="ZMax" Value="5" />
+	</CTF>
+	<Movement>
+		<Param Name="RangeMin" Value="500" />
+		<Param Name="RangeMax" Value="8" />
+		<Param Name="Bfactor" Value="-500" />
+	</Movement>
+	<Grids>
+		<Param Name="CTFX" Value="5" />
+		<Param Name="CTFY" Value="5" />
+		<Param Name="CTFZ" Value="1" />
+		<Param Name="MovementX" Value="5" />
+		<Param Name="MovementY" Value="5" />
+		<Param Name="MovementZ" Value="20" />
+	</Grids>
+	<Tomo>
+		<Param Name="DimensionsX" Value="4096" />
+		<Param Name="DimensionsY" Value="4096" />
+		<Param Name="DimensionsZ" Value="2000" />
+	</Tomo>
+	<Picking>
+		<Param Name="ModelPath" Value="" />
+		<Param Name="DataStyle" Value="cryo" />
+		<Param Name="Diameter" Value="200" />
+		<Param Name="MinimumScore" Value="0.95" />
+		<Param Name="MinimumMaskDistance" Value="0" />
+		<Param Name="DoExport" Value="False" />
+		<Param Name="BoxSize" Value="128" />
+		<Param Name="DoResample" Value="False" />
+		<Param Name="BoxSizeResample" Value="128" />
+		<Param Name="BoxMiniSize" Value="-1" />
+		<Param Name="Invert" Value="True" />
+		<Param Name="Normalize" Value="True" />
+		<Param Name="DoRunningWindow" Value="True" />
+		<Param Name="RunningWindowLength" Value="10000" />
+	</Picking>
+	<Export>
+		<Param Name="DoAverage" Value="True" />
+		<Param Name="DoStack" Value="False" />
+		<Param Name="DoDeconvolve" Value="False" />
+		<Param Name="DoDenoise" Value="False" />
+		<Param Name="DeconvolutionStrength" Value="1" />
+		<Param Name="DeconvolutionFalloff" Value="1" />
+		<Param Name="StackGroupSize" Value="1" />
+		<Param Name="SkipFirstN" Value="0" />
+		<Param Name="SkipLastN" Value="0" />
+	</Export>
+	<Tasks>
+		<Param Name="UseRelativePaths" Value="True" />
+		<Param Name="TomoFullReconstructNormalize" Value="True" />
+		<Param Name="TomoFullReconstructPrepareDenoising" Value="False" />
+		<Param Name="TomoFullReconstructDenoisingFrames" Value="True" />
+		<Param Name="TomoFullReconstructDenoisingTilts" Value="False" />
+		<Param Name="TomoFullReconstructOnlyFullVoxels" Value="False" />
+		<Param Name="TomoSubReconstructNormalizedCoords" Value="False" />
+		<Param Name="TomoSubReconstructPixel" Value="1" />
+		<Param Name="TomoSubReconstructBox" Value="128" />
+		<Param Name="TomoSubReconstructDiameter" Value="100" />
+		<Param Name="TomoSubReconstructVolume" Value="True" />
+		<Param Name="TomoSubReconstructSeries" Value="False" />
+		<Param Name="TomoSubReconstructShiftX" Value="0" />
+		<Param Name="TomoFullReconstructInvert" Value="True" />
+		<Param Name="TomoSubReconstructShiftY" Value="0" />
+		<Param Name="TomoSubReconstructPrerotated" Value="False" />
+		<Param Name="TomoSubReconstructDoLimitDose" Value="False" />
+		<Param Name="TomoSubReconstructNTilts" Value="1" />
+		<Param Name="TomoSubReconstructMakeSparse" Value="True" />
+		<Param Name="TomoMatchTemplatePixel" Value="1" />
+		<Param Name="TomoMatchTemplateDiameter" Value="100" />
+		<Param Name="TomoMatchPeakDistance" Value="100" />
+		<Param Name="TomoMatchTemplateFraction" Value="100" />
+		<Param Name="TomoMatchWhitenSpectrum" Value="True" />
+		<Param Name="TomoMatchHealpixOrder" Value="1" />
+		<Param Name="TomoMatchBatchAngles" Value="32" />
+		<Param Name="TomoMatchSymmetry" Value="C1" />
+		<Param Name="TomoSubReconstructShiftZ" Value="0" />
+		<Param Name="TomoMatchNResults" Value="1000" />
+		<Param Name="TomoFullReconstructDeconvHighpass" Value="300" />
+		<Param Name="TomoFullReconstructDeconvStrength" Value="1" />
+		<Param Name="UseCPU" Value="False" />
+		<Param Name="IncludeFilteredOut" Value="False" />
+		<Param Name="IncludeUnselected" Value="False" />
+		<Param Name="InputOnePerItem" Value="False" />
+		<Param Name="InputPixelSize" Value="1" />
+		<Param Name="InputShiftPixelSize" Value="1" />
+		<Param Name="OutputPixelSize" Value="1" />
+		<Param Name="OutputSuffix" Value="" />
+		<Param Name="InputInvert" Value="True" />
+		<Param Name="InputNormalize" Value="True" />
+		<Param Name="InputFlipX" Value="False" />
+		<Param Name="InputFlipY" Value="False" />
+		<Param Name="TomoFullReconstructDeconvFalloff" Value="1" />
+		<Param Name="OutputNormalize" Value="True" />
+		<Param Name="AdjustDefocusSkipExcluded" Value="True" />
+		<Param Name="AdjustDefocusDeleteExcluded" Value="False" />
+		<Param Name="Export2DPixel" Value="1" />
+		<Param Name="Export2DBoxSize" Value="128" />
+		<Param Name="Export2DParticleDiameter" Value="100" />
+		<Param Name="Export2DDoAverages" Value="True" />
+		<Param Name="Export2DDoMovies" Value="False" />
+		<Param Name="Export2DDoOnlyTable" Value="False" />
+		<Param Name="Export2DDoDenoisingPairs" Value="False" />
+		<Param Name="Export2DPreflip" Value="False" />
+		<Param Name="TomoFullReconstructPixel" Value="1" />
+		<Param Name="TomoFullReconstructDoDeconv" Value="False" />
+		<Param Name="MicListMakePolishing" Value="False" />
+		<Param Name="ReuseCorrVolumes" Value="False" />
+	</Tasks>
+	<Filter>
+		<Param Name="AstigmatismMax" Value="3" />
+		<Param Name="DefocusMin" Value="0" />
+		<Param Name="DefocusMax" Value="5" />
+		<Param Name="PhaseMin" Value="0" />
+		<Param Name="PhaseMax" Value="1" />
+		<Param Name="ResolutionMax" Value="5" />
+		<Param Name="MotionMax" Value="5" />
+		<Param Name="ParticlesSuffix" Value="" />
+		<Param Name="ParticlesMin" Value="1" />
+		<Param Name="MaskPercentage" Value="10" />
+	</Filter>
+</Settings>

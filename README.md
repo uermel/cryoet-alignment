@@ -104,6 +104,22 @@ warp_alignment = read("/path/to/tilt_series.xml", reader="warp", pixel_size_a=1.
 write(warp_alignment, "/path/to/tilt_series.xml")
 ```
 
+Two ancillary Warp project files are supported as well: the `.tomostar` tilt-series descriptor (`_wrpMovieName`,
+`_wrpAngleTilt`, `_wrpAxisAngle`, `_wrpDose`, extra columns preserved) and the `.settings` project file
+(`WarpTools create_settings`; `WarpSettings.create(...)` fills the vendored default document exactly like
+`create_settings` does). Both are inferred from their extensions.
+
+```python
+from cryoet_alignment import read, write
+from cryoet_alignment.io.warp import WarpSettings, WarpTomostar
+
+tomostar = read("/path/to/tomostar/TS_01.tomostar")
+tomostar.movie_names, [r.angle_tilt for r in tomostar.rows]
+
+settings = WarpSettings.create(pixel_size_a=1.54, exposure_per_tilt=3.87, tomo_dims_px=(4096, 4096, 2000))
+write(settings, "/path/to/warp_tiltseries.settings")
+```
+
 ### RELION 5
 RELION 5 stores tilt-series metadata in a `tomograms.star` plus per-tomogram star files. Both on-disk layouts are read:
 the RELION-5 layout (`rlnTomoTiltSeriesStarFile` references) and the relion-4/WarpTools layout (per-tomogram blocks

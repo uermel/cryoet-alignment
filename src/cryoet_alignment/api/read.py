@@ -5,7 +5,7 @@ from cryoet_alignment.io.aretomo3 import AreTomo3ALN, AreTomo3CTF, AreTomo3TLT
 from cryoet_alignment.io.cryoet_data_portal import Alignment
 from cryoet_alignment.io.imod import ImodAlignment
 from cryoet_alignment.io.relion import RelionAlignment
-from cryoet_alignment.io.warp import WarpAlignment
+from cryoet_alignment.io.warp import WarpAlignment, WarpSettings, WarpTomostar
 
 PATH_TYPE = Union[str, bytes, os.PathLike]
 
@@ -115,6 +115,30 @@ def read_warp(xml_path: PATH_TYPE, pixel_size_a: float = None) -> WarpAlignment:
     return WarpAlignment.from_file(xml_path, pixel_size_a=pixel_size_a)
 
 
+def read_warp_tomostar(tomostar_path: PATH_TYPE) -> WarpTomostar:
+    """Read a Warp .tomostar tilt-series descriptor.
+
+    Args:
+        tomostar_path: The path to the .tomostar file.
+
+    Returns:
+        WarpTomostar: The tomostar object.
+    """
+    return WarpTomostar.from_file(tomostar_path)
+
+
+def read_warp_settings(settings_path: PATH_TYPE) -> WarpSettings:
+    """Read a Warp .settings project file.
+
+    Args:
+        settings_path: The path to the .settings file.
+
+    Returns:
+        WarpSettings: The settings object.
+    """
+    return WarpSettings.from_file(settings_path)
+
+
 def read_relion(
     tomograms_star: PATH_TYPE,
     tomo_name: str = None,
@@ -143,6 +167,8 @@ READER = {
     "aretomo3_tlt": read_aretomo3_tlt,
     "cdp": read_cdp,
     "warp": read_warp,
+    "warp_tomostar": read_warp_tomostar,
+    "warp_settings": read_warp_settings,
     "relion": read_relion,
 }
 
@@ -156,6 +182,8 @@ INFER_READER = {
     ".aln": "aretomo3",
     ".json": "cdp",
     ".star": "relion",
+    ".tomostar": "warp_tomostar",
+    ".settings": "warp_settings",
 }
 
 
@@ -163,14 +191,25 @@ def read(
     path: PATH_TYPE,
     reader: str = None,
     **kwargs,
-) -> Union[AreTomo3ALN, AreTomo3CTF, AreTomo3TLT, Alignment, ImodAlignment, RelionAlignment, WarpAlignment]:
+) -> Union[
+    AreTomo3ALN,
+    AreTomo3CTF,
+    AreTomo3TLT,
+    Alignment,
+    ImodAlignment,
+    RelionAlignment,
+    WarpAlignment,
+    WarpTomostar,
+    WarpSettings,
+]:
     """Read alignment files in IMOD, AreTomo3, CryoET Data Portal, RELION, or Warp format.
 
     Args:
         path: The path to the alignment file (or basename for IMOD).
         reader: The reader to use for the alignment file (one of "imod", "aretomo3",
-        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", or "warp"). If None, the reader
-        will be inferred from the file extension (".aln", ".json", ".star").
+        "aretomo3_ctf", "aretomo3_tlt", "cdp", "relion", "warp", "warp_tomostar" or
+        "warp_settings"). If None, the reader will be inferred from the file extension
+        (".aln", ".json", ".star", ".tomostar", ".settings").
         Note: ``.xml``, _CTF.txt and _TLT.txt are not auto-inferred — pass the reader explicitly.
         **kwargs: Passed through to the selected reader (e.g. ``pixel_size_a``
         for ``reader="warp"``; ``tomo_name``/``image_size_px`` for ``reader="relion"``).
