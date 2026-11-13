@@ -250,10 +250,12 @@ class Alignment(FileIOBase):
     ):
         """Convert an AreTomo3 ``.aln`` (global rows only; patch locals are not representable here).
 
-        ``z_index`` is the row's ``SEC - 1`` (the 1-based tilt-sorted raw index AreTomo3 preserves across
-        dark-frame removal); ``tilt_angle = TILT``, ``in_plane_rotation = ang2mat(ROT)``, offsets ``TX``/``TY``
-        in pixels; ``tilt_offset = AlphaOffset``, ``x_rotation_offset = BetaOffset`` (provenance only —
-        BetaOffset never enters AreTomo3's projection geometry).
+        ``z_index`` is the row's raw-stack section, ``SEC - sec_base``: ``SEC - 1`` for AreTomo3's 1-based
+        tilt-sorted index (preserved across dark-frame removal), ``SEC`` for legacy 0-based files. Legacy rows
+        are tilt-sorted while SEC follows the input stack, so ``z_index`` need not ascend with the rows.
+        ``tilt_angle = TILT``, ``in_plane_rotation = ang2mat(ROT)``, offsets ``TX``/``TY`` in pixels;
+        ``tilt_offset = AlphaOffset``, ``x_rotation_offset = BetaOffset`` (provenance only — BetaOffset never
+        enters AreTomo3's projection geometry).
         """
         fallback = None
         if aln.Thickness and pixel_size_a is not None:

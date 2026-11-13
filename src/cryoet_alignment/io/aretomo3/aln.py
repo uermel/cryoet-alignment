@@ -11,9 +11,13 @@ class GlobalAlignmentInfo(BaseModel):
     """Global alignment information for one section of a tilt series.
 
     Attributes:
-        sec (int): 1-based index of the image in the tilt-angle-sorted RAW stack (dark frames included).
-            AreTomo3 assigns ``i + 1`` per raw section (``CTiltSeries::ResetSecIndices``) and preserves the value
-            across dark-frame removal (``CAlignParam::RemoveDarkFrames``), so ``sec - 1`` is the raw z index.
+        sec (int): Index of the image in the RAW stack the alignment was computed on (dark frames included).
+            AreTomo3 assigns ``i + 1`` per raw section of its tilt-angle-sorted stack
+            (``CTiltSeries::ResetSecIndices``) and preserves the value across dark-frame removal
+            (``CAlignParam::RemoveDarkFrames``), so ``sec - 1`` is the raw z index and SEC ascends with the rows.
+            Legacy (AreTomo/AreTomo2-era) files number sections from 0 in the order of the *input* stack while
+            listing the rows by tilt angle, so for an input stack that is not sorted by angle (e.g. acquisition
+            order) SEC is a non-ascending permutation; ``sec`` is then the 0-based raw z index.
         rot (float): Tilt Axis Rotation angle in degrees.
         gmag (float): Magnification change.
         tx (float): X translation in pixels.
@@ -75,7 +79,8 @@ class DarkFrameInfo(BaseModel):
     """Dark frame information for one section of a tilt series.
 
     Attributes:
-        section_idx (int): 0-based index of the dark image in the tilt-angle-sorted RAW stack.
+        section_idx (int): 0-based index of the dark image in the RAW stack the alignment was computed on
+            (tilt-angle sorted for AreTomo3; input-stack order for legacy files).
         val2 (int): The image's 1-based SEC index (``section_idx + 1``); AreTomo3 writes both
             (``CSaveAlignFile.cpp:90-96``). Older files carry 0 here.
         angle (float): Tilt angle in degrees (AlphaOffset included, as for the TILT column).
@@ -220,14 +225,18 @@ class AreTomo3ALN(FileIOBase):
                 f"= {n_glob * self.NumPatches}",
             )
         secs = [g.sec for g in self.GlobalAlignments]
-        if any(b <= a for a, b in zip(secs, secs[1:])):
-            raise ValueError(f".aln: SEC column is not strictly ascending: {secs}")
+        # SEC ascends in AreTomo3 files, but legacy files list rows by tilt angle with SEC in input-stack order,
+        # which is a permutation when the input stack was not angle-sorted. Only repeats are malformed; the
+        # coverage check below guarantees the rest.
+        if len(set(secs)) != len(secs):
+            duplicates = sorted({s for s in secs if secs.count(s) > 1})
+            raise ValueError(f".aln: SEC column contains repeated sections {duplicates}: {secs}")
         darks = [d.section_idx for d in self.DarkFrames]
         expected = list(range(n_raw))
         if sorted([sec - 1 for sec in secs] + darks) == expected:
             base = 1  # AreTomo3: SEC = 1-based tilt-sorted raw index (CTiltSeries::ResetSecIndices)
         elif sorted(secs + darks) == expected:
-            base = 0  # legacy (AreTomo2-era) files number sections from 0
+            base = 0  # legacy (AreTomo2-era) files number sections from 0, in input-stack order
         else:
             raise ValueError(
                 ".aln: the SEC column together with the DarkFrame indices must enumerate every raw section "
@@ -251,7 +260,11 @@ class AreTomo3ALN(FileIOBase):
         return int(self.RawSize[2])
 
     def z_indices(self) -> List[int]:
-        """0-based raw-stack section of every global row (``SEC - sec_base``), in row order."""
+        """0-based raw-stack section of every global row (``SEC - sec_base``), in row order.
+
+        Not necessarily ascending: legacy files computed on a stack that is not sorted by angle list the rows by
+        tilt with SEC in input-stack order.
+        """
         return [g.sec - self.sec_base for g in self.GlobalAlignments]
 
     def dark_indices(self) -> List[int]:
