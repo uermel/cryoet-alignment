@@ -78,3 +78,19 @@ def test_aln_repeated_sec_raises():
             DarkFrames=[],
             GlobalAlignments=[GlobalAlignmentInfo(sec=s, rot=0.0, tx=0.0, ty=0.0, tilt=t) for s, t in rows],
         )
+
+
+def test_aln_legacy_permuted_sec_dark_frame_input_index():
+    """Legacy AreTomo 1.x files write "DarkFrame = <tilt-sorted index> <input-stack index> <angle>" with SEC in
+    input-stack order; the dark frame then sits at its second value (here the +6 image of a bi-directional stack)."""
+    path = Path(__file__).parent / "data" / "test_legacy_permuted_dark.aln"
+    aln = AreTomo3ALN.from_file(path)
+
+    assert aln.sec_base == 0
+    assert aln.z_indices() == [6, 5, 4, 0, 1, 3]
+    assert aln.dark_indices() == [2]
+    assert aln.raw_tilts() == [0.0, 3.0, 6.0, 9.0, -3.0, -6.0, -9.0]
+    assert aln.row_slots() == [3, 4, -1, 5, 2, 1, 0]
+
+    with open(path, "r") as f:
+        assert str(aln) == f.read(), "Serialization does not match."
